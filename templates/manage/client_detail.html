@@ -1,0 +1,111 @@
+{% extends "manage/base.html" %}
+{% block title %}客户端详情 - {{ client.client_uid }}{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb mb-1">
+            <li class="breadcrumb-item"><a href="{% url 'clients' %}">客户端</a></li>
+            <li class="breadcrumb-item active">{{ client.client_uid|truncatechars:16 }}</li>
+        </ol>
+    </nav>
+    <h4><i class="bi bi-display"></i> 客户端详情</h4>
+</div>
+
+<div class="row g-4">
+    <div class="col-md-5">
+        <div class="card mb-4">
+            <div class="card-header"><strong>基本信息</strong></div>
+            <div class="card-body">
+                <table class="table table-borderless mb-0">
+                    <tr>
+                        <td class="text-muted" style="width:130px;">UID</td>
+                        <td><code>{{ client.client_uid }}</code></td>
+                    </tr>
+                    <tr>
+                        <td class="text-muted">班级标识</td>
+                        <td>{{ client.client_id|default:"-" }}</td>
+                    </tr>
+                    <tr>
+                        <td class="text-muted">MAC 地址</td>
+                        <td><code>{{ client.client_mac|default:"-" }}</code></td>
+                    </tr>
+                    <tr>
+                        <td class="text-muted">在线状态</td>
+                        <td>
+                            {% if client.is_online %}
+                            <span class="badge badge-online">在线</span>
+                            {% else %}
+                            <span class="badge badge-offline">离线</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="text-muted">注册时间</td>
+                        <td>{{ client.registered_at }}</td>
+                    </tr>
+                    <tr>
+                        <td class="text-muted">最后在线</td>
+                        <td>{{ client.last_seen|default:"-" }}</td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-header"><strong>管理设置</strong></div>
+            <div class="card-body">
+                <form method="post">
+                    {% csrf_token %}
+                    <div class="mb-3">
+                        <label class="form-label">所属班级组</label>
+                        <select name="class_group_id" class="form-select">
+                            <option value="">— 未分配 —</option>
+                            {% for g in groups %}
+                            <option value="{{ g.id }}" {% if client.class_group_id == g.id %}selected{% endif %}>
+                                {{ g.name }} ({{ g.class_identity }})
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">状态</label>
+                        <select name="status" class="form-select">
+                            <option value="0" {% if client.status == 0 %}selected{% endif %}>待审批</option>
+                            <option value="1" {% if client.status == 1 %}selected{% endif %}>已批准</option>
+                            <option value="2" {% if client.status == 2 %}selected{% endif %}>已封禁</option>
+                        </select>
+                    </div>
+                    <button type="submit" class="btn btn-primary"><i class="bi bi-check-lg"></i> 保存</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-7">
+        <div class="card">
+            <div class="card-header"><strong>最近审计日志</strong></div>
+            <div class="card-body p-0">
+                <table class="table table-hover mb-0">
+                    <thead>
+                        <tr>
+                            <th>事件</th>
+                            <th>时间</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for log in audit_logs %}
+                        <tr>
+                            <td>{{ log.get_event_type_display }}</td>
+                            <td>{{ log.timestamp_utc }}</td>
+                        </tr>
+                        {% empty %}
+                        <tr><td colspan="2" class="text-center text-muted py-3">暂无日志</td></tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

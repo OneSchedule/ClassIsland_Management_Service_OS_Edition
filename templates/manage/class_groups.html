@@ -1,0 +1,107 @@
+{% extends "manage/base.html" %}
+{% block title %}班级组管理 - ClassIsland 集控{% endblock %}
+
+{% block content %}
+<div class="page-header d-flex justify-content-between align-items-center">
+    <div>
+        <h4><i class="bi bi-collection"></i> 班级组管理</h4>
+        <p class="text-muted mb-0">管理班级组及其课表、时间表等资源</p>
+    </div>
+    <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addGroupModal">
+        <i class="bi bi-plus-lg"></i> 新建班级组
+    </button>
+</div>
+
+<div class="card">
+    <div class="card-body p-0">
+        <table class="table table-hover mb-0">
+            <thead>
+                <tr>
+                    <th>名称</th>
+                    <th>班级标识</th>
+                    <th>客户端数</th>
+                    <th>课表版本</th>
+                    <th>时间表版本</th>
+                    <th>科目版本</th>
+                    <th>操作</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for g in groups %}
+                <tr>
+                    <td><strong>{{ g.name }}</strong></td>
+                    <td><code>{{ g.class_identity }}</code></td>
+                    <td>{{ g.clients.count }}</td>
+                    <td><span class="badge bg-secondary">v{{ g.class_plans_version }}</span></td>
+                    <td><span class="badge bg-secondary">v{{ g.time_layouts_version }}</span></td>
+                    <td><span class="badge bg-secondary">v{{ g.subjects_version }}</span></td>
+                    <td>
+                        <a href="{% url 'class_group_detail' g.pk %}" class="btn btn-sm btn-outline-primary">
+                            <i class="bi bi-pencil"></i> 编辑
+                        </a>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr><td colspan="7" class="text-center text-muted py-4">暂无班级组，点击右上角创建</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- 新建对话框 -->
+<div class="modal fade" id="addGroupModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form id="addGroupForm">
+                {% csrf_token %}
+                <div class="modal-header">
+                    <h5 class="modal-title">新建班级组</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label">班级名称</label>
+                        <input type="text" name="name" class="form-control" required placeholder="例: 高一(1)班">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">班级标识 (ClassIdentity)</label>
+                        <input type="text" name="class_identity" class="form-control" required placeholder="例: grade1-class1">
+                        <div class="form-text">客户端通过此标识匹配班级组，请使用唯一的英文标识</div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+                    <button type="submit" class="btn btn-primary">创建</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.getElementById('addGroupForm').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    const form = new FormData(this);
+    const resp = await fetch('/manage/api/groups/', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': form.get('csrfmiddlewaretoken'),
+        },
+        body: JSON.stringify({
+            name: form.get('name'),
+            class_identity: form.get('class_identity'),
+        }),
+    });
+    if (resp.ok) {
+        location.reload();
+    } else {
+        const data = await resp.json();
+        alert(data.error || '创建失败');
+    }
+});
+</script>
+{% endblock %}

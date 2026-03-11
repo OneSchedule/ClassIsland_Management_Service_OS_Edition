@@ -1,0 +1,15 @@
+[project]
+name = "classisland-management-service-community-edition"
+version = "0.1.0"
+description = "Add your description here"
+requires-python = ">=3.13"
+dependencies = [
+    "channels>=4.3.2",
+    "cryptography>=46.0.5",
+    "django>=6.0.3",
+    "djangorestframework>=3.16.1",
+    "grpcio>=1.78.0",
+    "grpcio-tools>=1.78.0",
+    "protobuf>=6.33.5",
+    "whitenoise>=6.12.0",
+]

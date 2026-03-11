@@ -1,0 +1,124 @@
+{% extends "manage/base.html" %}
+{% block title %}{{ group.name }} - 班级组详情{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb mb-1">
+            <li class="breadcrumb-item"><a href="{% url 'class_groups' %}">班级组</a></li>
+            <li class="breadcrumb-item active">{{ group.name }}</li>
+        </ol>
+    </nav>
+    <h4><i class="bi bi-collection"></i> {{ group.name }}</h4>
+    <p class="text-muted mb-0">班级标识: <code>{{ group.class_identity }}</code> · 更新于 {{ group.updated_at }}</p>
+</div>
+
+<form method="post">
+    {% csrf_token %}
+    <div class="row g-4">
+        <div class="col-md-4">
+            <div class="card mb-4">
+                <div class="card-header"><strong>基本信息</strong></div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <label class="form-label">班级名称</label>
+                        <input type="text" name="name" class="form-control" value="{{ group.name }}">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">班级标识</label>
+                        <input type="text" class="form-control" value="{{ group.class_identity }}" disabled>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">关联客户端</label>
+                        <p class="form-control-plaintext">{{ group.clients.count }} 台</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-8">
+            <div class="card mb-3">
+                <div class="card-header d-flex justify-content-between">
+                    <strong>课表 (classPlanSource)</strong>
+                    <span class="badge bg-primary">v{{ group.class_plans_version }}</span>
+                </div>
+                <div class="card-body">
+                    <textarea name="class_plans_json" class="form-control font-monospace" rows="6"
+                        placeholder='粘贴 Profile JSON（课表部分）'>{{ group.class_plans_json|safe }}</textarea>
+                </div>
+            </div>
+
+            <div class="card mb-3">
+                <div class="card-header d-flex justify-content-between">
+                    <strong>时间表 (timeLayoutSource)</strong>
+                    <span class="badge bg-primary">v{{ group.time_layouts_version }}</span>
+                </div>
+                <div class="card-body">
+                    <textarea name="time_layouts_json" class="form-control font-monospace" rows="6"
+                        placeholder='粘贴 Profile JSON（时间表部分）'>{{ group.time_layouts_json|safe }}</textarea>
+                </div>
+            </div>
+
+            <div class="card mb-3">
+                <div class="card-header d-flex justify-content-between">
+                    <strong>科目 (subjectsSource)</strong>
+                    <span class="badge bg-primary">v{{ group.subjects_version }}</span>
+                </div>
+                <div class="card-body">
+                    <textarea name="subjects_json" class="form-control font-monospace" rows="4"
+                        placeholder='粘贴 Profile JSON（科目部分）'>{{ group.subjects_json|safe }}</textarea>
+                </div>
+            </div>
+
+            <div class="card mb-3">
+                <div class="card-header d-flex justify-content-between">
+                    <strong>默认设置 (defaultSettingsSource)</strong>
+                    <span class="badge bg-info">v{{ group.settings_version }}</span>
+                </div>
+                <div class="card-body">
+                    <textarea name="settings_json" class="form-control font-monospace" rows="4"
+                        placeholder='Settings JSON'>{{ group.settings_json|safe }}</textarea>
+                </div>
+            </div>
+
+            <div class="card mb-3">
+                <div class="card-header d-flex justify-content-between">
+                    <strong>策略 (policySource)</strong>
+                    <span class="badge bg-warning text-dark">v{{ group.policy_version }}</span>
+                </div>
+                <div class="card-body">
+                    <textarea name="policy_json" class="form-control font-monospace" rows="4"
+                        placeholder='ManagementPolicy JSON'>{{ group.policy_json|safe }}</textarea>
+                </div>
+            </div>
+
+            <div class="card mb-3">
+                <div class="card-header d-flex justify-content-between">
+                    <strong>凭据 (credentialSource)</strong>
+                    <span class="badge bg-danger">v{{ group.credential_version }}</span>
+                </div>
+                <div class="card-body">
+                    <textarea name="credential_json" class="form-control font-monospace" rows="4"
+                        placeholder='ManagementCredentialConfig JSON'>{{ group.credential_json|safe }}</textarea>
+                </div>
+            </div>
+
+            <div class="card mb-3">
+                <div class="card-header d-flex justify-content-between">
+                    <strong>组件 (componentsSource)</strong>
+                    <span class="badge bg-secondary">v{{ group.components_version }}</span>
+                </div>
+                <div class="card-body">
+                    <textarea name="components_json" class="form-control font-monospace" rows="3"
+                        placeholder='Components JSON'>{{ group.components_json|safe }}</textarea>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="d-flex justify-content-end gap-2 mt-3 mb-5">
+        <a href="{% url 'class_groups' %}" class="btn btn-secondary">返回</a>
+        <button type="submit" class="btn btn-primary"><i class="bi bi-check-lg"></i> 保存</button>
+    </div>
+</form>
+{% endblock %}

@@ -1,0 +1,95 @@
+{% extends "manage/base.html" %}
+{% block title %}组织设置 - ClassIsland 集控{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h4><i class="bi bi-gear"></i> 组织设置</h4>
+    <p class="text-muted mb-0">管理组织信息和服务器密钥</p>
+</div>
+
+<div class="row g-4">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header"><strong>组织信息</strong></div>
+            <div class="card-body">
+                <form method="post">
+                    {% csrf_token %}
+                    <div class="mb-3">
+                        <label class="form-label">组织名称</label>
+                        <input type="text" name="name" class="form-control" value="{{ org.name }}">
+                        <div class="form-text">将显示在客户端集控标识中</div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">核心版本 (coreVersion)</label>
+                        <input type="text" name="core_version" class="form-control" value="{{ org.core_version }}">
+                        <div class="form-text">主版本需与客户端一致，否则客户端拒绝连接</div>
+                    </div>
+                    <button type="submit" class="btn btn-primary"><i class="bi bi-check-lg"></i> 保存</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header"><strong>服务器 PGP 密钥</strong></div>
+            <div class="card-body">
+                {% if keypair %}
+                <table class="table table-borderless mb-3">
+                    <tr>
+                        <td class="text-muted" style="width:100px;">Key ID</td>
+                        <td><code>{{ keypair.key_id }}</code></td>
+                    </tr>
+                    <tr>
+                        <td class="text-muted">状态</td>
+                        <td><span class="badge bg-success">活跃</span></td>
+                    </tr>
+                    <tr>
+                        <td class="text-muted">创建时间</td>
+                        <td>{{ keypair.created_at }}</td>
+                    </tr>
+                </table>
+                <details class="mb-3">
+                    <summary class="text-muted small">查看公钥</summary>
+                    <pre class="bg-light p-2 mt-2 small" style="max-height:200px;overflow:auto;">{{ keypair.public_key_armored }}</pre>
+                </details>
+                {% else %}
+                <p class="text-muted">尚未生成密钥对</p>
+                {% endif %}
+                <form method="post">
+                    {% csrf_token %}
+                    <button type="submit" name="regenerate_key" value="1" class="btn btn-warning"
+                        onclick="return confirm('重新生成密钥将导致已连接的客户端需要重新握手，确认？')">
+                        <i class="bi bi-arrow-repeat"></i> 重新生成密钥
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        <div class="card mt-4">
+            <div class="card-header"><strong>连接信息</strong></div>
+            <div class="card-body">
+                <p class="small text-muted">客户端需配置以下信息连接集控服务器：</p>
+                <table class="table table-borderless mb-0 small">
+                    <tr>
+                        <td class="text-muted">协议</td>
+                        <td><code>Cyrene_MSP</code></td>
+                    </tr>
+                    <tr>
+                        <td class="text-muted">协议版本</td>
+                        <td><code>2.0.0.0</code></td>
+                    </tr>
+                    <tr>
+                        <td class="text-muted">HTTP 地址</td>
+                        <td><code>http://&lt;your-host&gt;:8000</code></td>
+                    </tr>
+                    <tr>
+                        <td class="text-muted">gRPC 地址</td>
+                        <td><code>http://&lt;your-host&gt;:50051</code></td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

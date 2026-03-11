@@ -1,0 +1,44 @@
+{% extends "manage/base.html" %}
+{% block title %}审计日志 - ClassIsland 集控{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h4><i class="bi bi-journal-text"></i> 审计日志</h4>
+    <p class="text-muted mb-0">客户端上报的审计事件记录</p>
+</div>
+
+<div class="card">
+    <div class="card-body p-0">
+        <table class="table table-hover mb-0">
+            <thead>
+                <tr>
+                    <th>客户端</th>
+                    <th>事件类型</th>
+                    <th>事件时间 (UTC)</th>
+                    <th>接收时间</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for log in logs %}
+                <tr>
+                    <td>
+                        <a href="{% url 'client_detail' log.client.pk %}">
+                            <code>{{ log.client.client_uid|truncatechars:16 }}</code>
+                        </a>
+                    </td>
+                    <td>
+                        <span class="badge bg-{% if log.event_type == 9 %}danger{% elif log.event_type == 1 %}success{% elif log.event_type == 2 %}warning{% else %}secondary{% endif %}">
+                            {{ log.get_event_type_display }}
+                        </span>
+                    </td>
+                    <td>{{ log.timestamp_utc }}</td>
+                    <td>{{ log.received_at }}</td>
+                </tr>
+                {% empty %}
+                <tr><td colspan="4" class="text-center text-muted py-4">暂无审计日志</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}
