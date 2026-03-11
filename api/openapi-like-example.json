@@ -1,0 +1,188 @@
+{
+  "title": "ClassIsland Management Server HTTP API (reverse engineered)",
+  "version": "2026-03-12",
+  "notes": [
+    "This file is inferred from ClassIsland client implementation.",
+    "It is not an official compatibility guarantee."
+  ],
+  "servers": [
+    {
+      "name": "management-server",
+      "baseUrl": "https://your-management-server.example.com"
+    }
+  ],
+  "templateVariables": {
+    "{cuid}": "Client GUID (ManagementClientPersistConfig.ClientUniqueId)",
+    "{id}": "Class identity (ManagementSettings.ClassIdentity)",
+    "{host}": "Management HTTP base URL"
+  },
+  "paths": {
+    "/api/v1/client/{cuid}/manifest": {
+      "get": {
+        "summary": "Get management manifest",
+        "pathParams": {
+          "cuid": {
+            "type": "string",
+            "format": "uuid"
+          }
+        },
+        "responses": {
+          "200": {
+            "contentType": "application/json",
+            "schema": {
+              "$ref": "#/components/schemas/ManagementManifest"
+            }
+          }
+        }
+      }
+    }
+  },
+  "resourcePullRules": {
+    "downloadWhen": "source.value is not empty AND source.version > localVersion",
+    "clientTemplateExpansion": [
+      "{cuid}",
+      "{id}",
+      "{host}"
+    ],
+    "sources": {
+      "classPlanSource": {
+        "type": "Profile",
+        "note": "Profile subset: class plans"
+      },
+      "timeLayoutSource": {
+        "type": "Profile",
+        "note": "Profile subset: time layouts"
+      },
+      "subjectsSource": {
+        "type": "Profile",
+        "note": "Profile subset: subjects"
+      },
+      "defaultSettingsSource": {
+        "type": "Settings"
+      },
+      "policySource": {
+        "type": "ManagementPolicy"
+      },
+      "credentialSource": {
+        "type": "ManagementCredentialConfig"
+      },
+      "componentsSource": {
+        "type": "unknown/unused in current main flow"
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "ReVersionString": {
+        "type": "object",
+        "properties": {
+          "value": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "version": {
+            "type": "integer"
+          }
+        },
+        "required": [
+          "version"
+        ]
+      },
+      "ManagementManifest": {
+        "type": "object",
+        "properties": {
+          "classPlanSource": {
+            "$ref": "#/components/schemas/ReVersionString"
+          },
+          "timeLayoutSource": {
+            "$ref": "#/components/schemas/ReVersionString"
+          },
+          "subjectsSource": {
+            "$ref": "#/components/schemas/ReVersionString"
+          },
+          "defaultSettingsSource": {
+            "$ref": "#/components/schemas/ReVersionString"
+          },
+          "policySource": {
+            "$ref": "#/components/schemas/ReVersionString"
+          },
+          "componentsSource": {
+            "$ref": "#/components/schemas/ReVersionString"
+          },
+          "credentialSource": {
+            "$ref": "#/components/schemas/ReVersionString"
+          },
+          "serverKind": {
+            "type": "integer",
+            "enum": [
+              0,
+              1
+            ],
+            "x-enumNames": [
+              "Serverless",
+              "ManagementServer"
+            ]
+          },
+          "organizationName": {
+            "type": "string"
+          },
+          "coreVersion": {
+            "type": "string",
+            "example": "2.0.0.0"
+          }
+        },
+        "required": [
+          "classPlanSource",
+          "timeLayoutSource",
+          "subjectsSource",
+          "defaultSettingsSource",
+          "policySource",
+          "componentsSource",
+          "credentialSource",
+          "serverKind",
+          "organizationName",
+          "coreVersion"
+        ]
+      }
+    },
+    "examples": {
+      "manifest": {
+        "value": {
+          "classPlanSource": {
+            "value": "{host}/objects/{id}/classplans.json",
+            "version": 12
+          },
+          "timeLayoutSource": {
+            "value": "{host}/objects/{id}/timelayouts.json",
+            "version": 9
+          },
+          "subjectsSource": {
+            "value": "{host}/objects/{id}/subjects.json",
+            "version": 5
+          },
+          "defaultSettingsSource": {
+            "value": "{host}/objects/{id}/settings.json",
+            "version": 7
+          },
+          "policySource": {
+            "value": "{host}/objects/{id}/policy.json",
+            "version": 15
+          },
+          "componentsSource": {
+            "value": "{host}/objects/{id}/components.json",
+            "version": 1
+          },
+          "credentialSource": {
+            "value": "{host}/objects/{id}/credentials.json",
+            "version": 4
+          },
+          "serverKind": 1,
+          "organizationName": "Example School",
+          "coreVersion": "2.0.0.0"
+        }
+      }
+    }
+  }
+}
