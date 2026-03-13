@@ -2,6 +2,8 @@ from django.contrib import admin
 from .models import (
     Organization, ClassGroup, Client, ServerKeyPair,
     AuditLog, PendingCommand, ConfigUploadRecord,
+    TimeLayoutConfig, SubjectConfig, ClassPlanConfig,
+    DefaultSettingsConfig, PolicyConfig, CredentialConfig, ComponentConfig,
 )
 
 
@@ -56,3 +58,46 @@ class ConfigUploadRecordAdmin(admin.ModelAdmin):
     list_display = ("client", "config_type", "request_guid", "received_at")
     list_filter = ("config_type",)
     readonly_fields = ("client", "request_guid", "config_type", "payload_json", "received_at")
+
+
+@admin.register(TimeLayoutConfig)
+class TimeLayoutConfigAdmin(admin.ModelAdmin):
+    list_display = ("name", "identifier", "updated_at")
+    search_fields = ("name", "identifier")
+
+
+@admin.register(SubjectConfig)
+class SubjectConfigAdmin(admin.ModelAdmin):
+    list_display = ("name", "identifier", "updated_at")
+    search_fields = ("name", "identifier")
+
+
+@admin.register(ClassPlanConfig)
+class ClassPlanConfigAdmin(admin.ModelAdmin):
+    list_display = ("name", "identifier", "time_layout", "updated_at")
+    search_fields = ("name", "identifier")
+    list_filter = ("time_layout",)
+
+
+@admin.register(DefaultSettingsConfig)
+class DefaultSettingsConfigAdmin(admin.ModelAdmin):
+    list_display = ("name", "identifier", "updated_at")
+    search_fields = ("name", "identifier")
+
+
+@admin.register(PolicyConfig)
+class PolicyConfigAdmin(admin.ModelAdmin):
+    list_display = ("name", "identifier", "updated_at")
+    search_fields = ("name", "identifier")
+
+
+@admin.register(CredentialConfig)
+class CredentialConfigAdmin(admin.ModelAdmin):
+    list_display = ("name", "identifier", "updated_at")
+    search_fields = ("name", "identifier")
+
+
+@admin.register(ComponentConfig)
+class ComponentConfigAdmin(admin.ModelAdmin):
+    list_display = ("name", "identifier", "updated_at")
+    search_fields = ("name", "identifier")

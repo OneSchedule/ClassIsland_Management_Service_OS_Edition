@@ -15,6 +15,16 @@ class Organization(models.Model):
     """组织/学校 —— 一个集控服务器实例对应一个组织"""
     name = models.CharField("组织名称", max_length=200, default="ClassIsland 集控")
     core_version = models.CharField("核心版本", max_length=20, default="2.0.0.0")
+    management_server = models.CharField(
+        "HTTP 地址",
+        max_length=255,
+        default="http://127.0.0.1:8000",
+    )
+    management_server_grpc = models.CharField(
+        "gRPC 地址",
+        max_length=255,
+        default="http://127.0.0.1:50051",
+    )
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
@@ -62,6 +72,38 @@ class ClassGroup(models.Model):
 
     credential_json = models.JSONField("凭据 JSON", default=dict, blank=True)
     credential_version = models.IntegerField("凭据版本", default=0)
+
+    # ── 关联配置（从"编辑配置"中选择已创建的配置） ──
+    linked_class_plan = models.ForeignKey(
+        "ClassPlanConfig", on_delete=models.SET_NULL,
+        null=True, blank=True, related_name="class_groups",
+        verbose_name="关联课表配置",
+    )
+    linked_subjects = models.ForeignKey(
+        "SubjectConfig", on_delete=models.SET_NULL,
+        null=True, blank=True, related_name="class_groups",
+        verbose_name="关联科目配置",
+    )
+    linked_default_settings = models.ForeignKey(
+        "DefaultSettingsConfig", on_delete=models.SET_NULL,
+        null=True, blank=True, related_name="class_groups",
+        verbose_name="关联默认设置",
+    )
+    linked_policy = models.ForeignKey(
+        "PolicyConfig", on_delete=models.SET_NULL,
+        null=True, blank=True, related_name="class_groups",
+        verbose_name="关联策略",
+    )
+    linked_credential = models.ForeignKey(
+        "CredentialConfig", on_delete=models.SET_NULL,
+        null=True, blank=True, related_name="class_groups",
+        verbose_name="关联凭据",
+    )
+    linked_component = models.ForeignKey(
+        "ComponentConfig", on_delete=models.SET_NULL,
+        null=True, blank=True, related_name="class_groups",
+        verbose_name="关联组件",
+    )
 
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -254,3 +296,144 @@ class ConfigUploadRecord(models.Model):
 
     def __str__(self):
         return f"[{self.get_config_type_display()}] {self.client.client_uid}"
+
+
+# ────────────────────────────────────────────────────
+# 配置管理：可复用的配置项
+# ────────────────────────────────────────────────────
+class TimeLayoutConfig(models.Model):
+    """时间表配置"""
+    organization = models.ForeignKey(
+        Organization, on_delete=models.CASCADE, related_name="time_layouts"
+    )
+    name = models.CharField("名称", max_length=200)
+    identifier = models.CharField("标识", max_length=200, unique=True, db_index=True)
+    data_json = models.JSONField("时间表 JSON", default=dict, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name = "时间表配置"
+        verbose_name_plural = "时间表配置"
+
+    def __str__(self):
+        return f"{self.name} ({self.identifier})"
+
+
+class SubjectConfig(models.Model):
+    """科目配置"""
+    organization = models.ForeignKey(
+        Organization, on_delete=models.CASCADE, related_name="subjects"
+    )
+    name = models.CharField("名称", max_length=200)
+    identifier = models.CharField("标识", max_length=200, unique=True, db_index=True)
+    data_json = models.JSONField("科目 JSON", default=dict, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name = "科目配置"
+        verbose_name_plural = "科目配置"
+
+    def __str__(self):
+        return f"{self.name} ({self.identifier})"
+
+
+class ClassPlanConfig(models.Model):
+    """课表配置 —— 必须依赖一个时间表"""
+    organization = models.ForeignKey(
+        Organization, on_delete=models.CASCADE, related_name="class_plans"
+    )
+    name = models.CharField("名称", max_length=200)
+    identifier = models.CharField("标识", max_length=200, unique=True, db_index=True)
+    time_layout = models.ForeignKey(
+        TimeLayoutConfig, on_delete=models.PROTECT,
+        related_name="class_plans",
+        verbose_name="依赖时间表",
+    )
+    data_json = models.JSONField("课表 JSON", default=dict, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name = "课表配置"
+        verbose_name_plural = "课表配置"
+
+    def __str__(self):
+        return f"{self.name} ({self.identifier})"
+
+
+class DefaultSettingsConfig(models.Model):
+    """默认设置配置"""
+    organization = models.ForeignKey(
+        Organization, on_delete=models.CASCADE, related_name="default_settings"
+    )
+    name = models.CharField("名称", max_length=200)
+    identifier = models.CharField("标识", max_length=200, unique=True, db_index=True)
+    data_json = models.JSONField("设置 JSON", default=dict, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name = "默认设置配置"
+        verbose_name_plural = "默认设置配置"
+
+    def __str__(self):
+        return f"{self.name} ({self.identifier})"
+
+
+class PolicyConfig(models.Model):
+    """策略配置"""
+    organization = models.ForeignKey(
+        Organization, on_delete=models.CASCADE, related_name="policies"
+    )
+    name = models.CharField("名称", max_length=200)
+    identifier = models.CharField("标识", max_length=200, unique=True, db_index=True)
+    data_json = models.JSONField("策略 JSON", default=dict, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name = "策略配置"
+        verbose_name_plural = "策略配置"
+
+    def __str__(self):
+        return f"{self.name} ({self.identifier})"
+
+
+class CredentialConfig(models.Model):
+    """凭据配置"""
+    organization = models.ForeignKey(
+        Organization, on_delete=models.CASCADE, related_name="credentials"
+    )
+    name = models.CharField("名称", max_length=200)
+    identifier = models.CharField("标识", max_length=200, unique=True, db_index=True)
+    data_json = models.JSONField("凭据 JSON", default=dict, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name = "凭据配置"
+        verbose_name_plural = "凭据配置"
+
+    def __str__(self):
+        return f"{self.name} ({self.identifier})"
+
+
+class ComponentConfig(models.Model):
+    """组件配置"""
+    organization = models.ForeignKey(
+        Organization, on_delete=models.CASCADE, related_name="components"
+    )
+    name = models.CharField("名称", max_length=200)
+    identifier = models.CharField("标识", max_length=200, unique=True, db_index=True)
+    data_json = models.JSONField("组件 JSON", default=dict, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name = "组件配置"
+        verbose_name_plural = "组件配置"
+
+    def __str__(self):
+        return f"{self.name} ({self.identifier})"

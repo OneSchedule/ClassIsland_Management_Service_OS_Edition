@@ -37,80 +37,112 @@
         </div>
 
         <div class="col-md-8">
+            <!-- 课表（含自动关联的时间表） -->
             <div class="card mb-3">
                 <div class="card-header d-flex justify-content-between">
-                    <strong>课表 (classPlanSource)</strong>
+                    <strong><i class="bi bi-calendar-week"></i> 课表</strong>
                     <span class="badge bg-primary">v{{ group.class_plans_version }}</span>
                 </div>
                 <div class="card-body">
-                    <textarea name="class_plans_json" class="form-control font-monospace" rows="6"
-                        placeholder='粘贴 Profile JSON（课表部分）'>{{ group.class_plans_json|safe }}</textarea>
+                    <select name="linked_class_plan" class="form-select">
+                        <option value="">-- 不关联 --</option>
+                        {% for cp in class_plans %}
+                        <option value="{{ cp.id }}" {% if group.linked_class_plan_id == cp.id %}selected{% endif %}>
+                            {{ cp.name }} ({{ cp.identifier }}) — 时间表: {{ cp.time_layout.name }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                    <div class="form-text">选择课表后，其依赖的时间表会自动关联，无需单独选择时间表。</div>
                 </div>
             </div>
 
+            <!-- 科目 -->
             <div class="card mb-3">
                 <div class="card-header d-flex justify-content-between">
-                    <strong>时间表 (timeLayoutSource)</strong>
-                    <span class="badge bg-primary">v{{ group.time_layouts_version }}</span>
-                </div>
-                <div class="card-body">
-                    <textarea name="time_layouts_json" class="form-control font-monospace" rows="6"
-                        placeholder='粘贴 Profile JSON（时间表部分）'>{{ group.time_layouts_json|safe }}</textarea>
-                </div>
-            </div>
-
-            <div class="card mb-3">
-                <div class="card-header d-flex justify-content-between">
-                    <strong>科目 (subjectsSource)</strong>
+                    <strong><i class="bi bi-book"></i> 科目</strong>
                     <span class="badge bg-primary">v{{ group.subjects_version }}</span>
                 </div>
                 <div class="card-body">
-                    <textarea name="subjects_json" class="form-control font-monospace" rows="4"
-                        placeholder='粘贴 Profile JSON（科目部分）'>{{ group.subjects_json|safe }}</textarea>
+                    <select name="linked_subjects" class="form-select">
+                        <option value="">-- 不关联 --</option>
+                        {% for s in subjects_list %}
+                        <option value="{{ s.id }}" {% if group.linked_subjects_id == s.id %}selected{% endif %}>
+                            {{ s.name }} ({{ s.identifier }})
+                        </option>
+                        {% endfor %}
+                    </select>
                 </div>
             </div>
 
+            <!-- 默认设置 -->
             <div class="card mb-3">
                 <div class="card-header d-flex justify-content-between">
-                    <strong>默认设置 (defaultSettingsSource)</strong>
+                    <strong><i class="bi bi-sliders"></i> 默认设置</strong>
                     <span class="badge bg-info">v{{ group.settings_version }}</span>
                 </div>
                 <div class="card-body">
-                    <textarea name="settings_json" class="form-control font-monospace" rows="4"
-                        placeholder='Settings JSON'>{{ group.settings_json|safe }}</textarea>
+                    <select name="linked_default_settings" class="form-select">
+                        <option value="">-- 不关联 --</option>
+                        {% for ds in default_settings_list %}
+                        <option value="{{ ds.id }}" {% if group.linked_default_settings_id == ds.id %}selected{% endif %}>
+                            {{ ds.name }} ({{ ds.identifier }})
+                        </option>
+                        {% endfor %}
+                    </select>
                 </div>
             </div>
 
+            <!-- 策略 -->
             <div class="card mb-3">
                 <div class="card-header d-flex justify-content-between">
-                    <strong>策略 (policySource)</strong>
+                    <strong><i class="bi bi-shield-check"></i> 策略</strong>
                     <span class="badge bg-warning text-dark">v{{ group.policy_version }}</span>
                 </div>
                 <div class="card-body">
-                    <textarea name="policy_json" class="form-control font-monospace" rows="4"
-                        placeholder='ManagementPolicy JSON'>{{ group.policy_json|safe }}</textarea>
+                    <select name="linked_policy" class="form-select">
+                        <option value="">-- 不关联 --</option>
+                        {% for p in policy_list %}
+                        <option value="{{ p.id }}" {% if group.linked_policy_id == p.id %}selected{% endif %}>
+                            {{ p.name }} ({{ p.identifier }})
+                        </option>
+                        {% endfor %}
+                    </select>
                 </div>
             </div>
 
+            <!-- 凭据 -->
             <div class="card mb-3">
                 <div class="card-header d-flex justify-content-between">
-                    <strong>凭据 (credentialSource)</strong>
+                    <strong><i class="bi bi-key"></i> 凭据</strong>
                     <span class="badge bg-danger">v{{ group.credential_version }}</span>
                 </div>
                 <div class="card-body">
-                    <textarea name="credential_json" class="form-control font-monospace" rows="4"
-                        placeholder='ManagementCredentialConfig JSON'>{{ group.credential_json|safe }}</textarea>
+                    <select name="linked_credential" class="form-select">
+                        <option value="">-- 不关联 --</option>
+                        {% for cr in credential_list %}
+                        <option value="{{ cr.id }}" {% if group.linked_credential_id == cr.id %}selected{% endif %}>
+                            {{ cr.name }} ({{ cr.identifier }})
+                        </option>
+                        {% endfor %}
+                    </select>
                 </div>
             </div>
 
+            <!-- 组件 -->
             <div class="card mb-3">
                 <div class="card-header d-flex justify-content-between">
-                    <strong>组件 (componentsSource)</strong>
+                    <strong><i class="bi bi-puzzle"></i> 组件</strong>
                     <span class="badge bg-secondary">v{{ group.components_version }}</span>
                 </div>
                 <div class="card-body">
-                    <textarea name="components_json" class="form-control font-monospace" rows="3"
-                        placeholder='Components JSON'>{{ group.components_json|safe }}</textarea>
+                    <select name="linked_component" class="form-select">
+                        <option value="">-- 不关联 --</option>
+                        {% for co in component_list %}
+                        <option value="{{ co.id }}" {% if group.linked_component_id == co.id %}selected{% endif %}>
+                            {{ co.name }} ({{ co.identifier }})
+                        </option>
+                        {% endfor %}
+                    </select>
                 </div>
             </div>
         </div>

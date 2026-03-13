@@ -1,0 +1,255 @@
+{% extends "manage/base.html" %}
+{% block title %}编辑配置 - ClassIsland 集控{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h4><i class="bi bi-sliders"></i> 编辑配置</h4>
+    <p class="text-muted mb-0">管理课表、时间表、科目、默认设置、策略、凭据、组件配置</p>
+</div>
+
+<!-- 子选项卡 -->
+<ul class="nav nav-tabs mb-4" id="configTabs">
+    {% for key, label in config_tabs %}
+    <li class="nav-item">
+        <a class="nav-link {% if active_tab == key %}active{% endif %}"
+           href="{% url 'config_editor_tab' key %}">{{ label }}</a>
+    </li>
+    {% endfor %}
+</ul>
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h5 class="mb-0">{{ active_label }}</h5>
+    <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addConfigModal">
+        <i class="bi bi-plus-lg"></i> 新建{{ active_label }}
+    </button>
+</div>
+
+<!-- 配置列表 -->
+<div class="card">
+    <div class="card-body p-0">
+        <table class="table table-hover mb-0">
+            <thead>
+                <tr>
+                    <th>名称</th>
+                    <th>标识</th>
+                    {% if active_tab == 'class_plans' %}
+                    <th>依赖时间表</th>
+                    {% endif %}
+                    <th>更新时间</th>
+                    <th>操作</th>
+                </tr>
+            </thead>
+            <tbody id="configTableBody">
+                <tr><td colspan="5" class="text-center text-muted py-4">加载中...</td></tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- 新建对话框 -->
+<div class="modal fade" id="addConfigModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <form id="addConfigForm">
+                {% csrf_token %}
+                <div class="modal-header">
+                    <h5 class="modal-title">新建{{ active_label }}</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label">名称</label>
+                        <input type="text" name="name" class="form-control" required placeholder="例：默认时间表">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">标识</label>
+                        <input type="text" name="identifier" class="form-control" required placeholder="例：default-time-layout">
+                        <div class="form-text">唯一标识符，建议使用英文</div>
+                    </div>
+                    {% if active_tab == 'class_plans' %}
+                    <div class="mb-3">
+                        <label class="form-label">依赖时间表 <span class="text-danger">*</span></label>
+                        <select name="time_layout_id" class="form-select" required>
+                            <option value="">请选择时间表</option>
+                            {% for tl in time_layouts %}
+                            <option value="{{ tl.id }}">{{ tl.name }} ({{ tl.identifier }})</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    {% endif %}
+                    <div class="mb-3">
+                        <label class="form-label">配置数据 (JSON)</label>
+                        <textarea name="data_json" class="form-control font-monospace" rows="8" placeholder="{}"></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+                    <button type="submit" class="btn btn-primary">创建</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- 编辑对话框 -->
+<div class="modal fade" id="editConfigModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <form id="editConfigForm">
+                {% csrf_token %}
+                <input type="hidden" name="edit_id" id="editId">
+                <div class="modal-header">
+                    <h5 class="modal-title">编辑配置</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label">名称</label>
+                        <input type="text" name="name" id="editName" class="form-control" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">标识</label>
+                        <input type="text" name="identifier" id="editIdentifier" class="form-control" required>
+                    </div>
+                    {% if active_tab == 'class_plans' %}
+                    <div class="mb-3">
+                        <label class="form-label">依赖时间表 <span class="text-danger">*</span></label>
+                        <select name="time_layout_id" id="editTimeLayout" class="form-select" required>
+                            <option value="">请选择时间表</option>
+                            {% for tl in time_layouts %}
+                            <option value="{{ tl.id }}">{{ tl.name }} ({{ tl.identifier }})</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    {% endif %}
+                    <div class="mb-3">
+                        <label class="form-label">配置数据 (JSON)</label>
+                        <textarea name="data_json" id="editDataJson" class="form-control font-monospace" rows="12"></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-danger me-auto" onclick="deleteConfig()">
+                        <i class="bi bi-trash"></i> 删除
+                    </button>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+                    <button type="submit" class="btn btn-primary">保存</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+const CONFIG_TYPE = '{{ active_tab }}';
+const API_BASE = `/manage/api/configs/${CONFIG_TYPE}/`;
+const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+
+async function loadConfigs() {
+    const resp = await fetch(API_BASE);
+    const data = await resp.json();
+    const tbody = document.getElementById('configTableBody');
+    if (!data.length) {
+        tbody.innerHTML = '<tr><td colspan="5" class="text-center text-muted py-4">暂无配置，点击右上角创建</td></tr>';
+        return;
+    }
+    tbody.innerHTML = data.map(item => {
+        let cols = `<td><strong>${item.name}</strong></td><td><code>${item.identifier}</code></td>`;
+        if (CONFIG_TYPE === 'class_plans') {
+            cols += `<td>${item.time_layout_name || '-'}</td>`;
+        }
+        cols += `<td>${new Date(item.updated_at).toLocaleString()}</td>`;
+        cols += `<td><button class="btn btn-sm btn-outline-primary" onclick="editConfig(${item.id})"><i class="bi bi-pencil"></i> 编辑</button></td>`;
+        return `<tr>${cols}</tr>`;
+    }).join('');
+}
+
+document.getElementById('addConfigForm').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    const fd = new FormData(this);
+    const body = {
+        name: fd.get('name'),
+        identifier: fd.get('identifier'),
+    };
+    const rawJson = fd.get('data_json');
+    if (rawJson && rawJson.trim()) {
+        try { body.data_json = JSON.parse(rawJson); } catch(e) { alert('JSON 格式错误'); return; }
+    }
+    if (CONFIG_TYPE === 'class_plans') {
+        body.time_layout_id = fd.get('time_layout_id');
+    }
+    const resp = await fetch(API_BASE, {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json', 'X-CSRFToken': csrfToken},
+        body: JSON.stringify(body),
+    });
+    if (resp.ok) {
+        bootstrap.Modal.getInstance(document.getElementById('addConfigModal')).hide();
+        this.reset();
+        loadConfigs();
+    } else {
+        const err = await resp.json();
+        alert(err.error || '创建失败');
+    }
+});
+
+async function editConfig(id) {
+    const resp = await fetch(`${API_BASE}${id}/`);
+    const item = await resp.json();
+    document.getElementById('editId').value = id;
+    document.getElementById('editName').value = item.name;
+    document.getElementById('editIdentifier').value = item.identifier;
+    document.getElementById('editDataJson').value = JSON.stringify(item.data_json, null, 2);
+    const tlSelect = document.getElementById('editTimeLayout');
+    if (tlSelect) tlSelect.value = item.time_layout_id || '';
+    new bootstrap.Modal(document.getElementById('editConfigModal')).show();
+}
+
+document.getElementById('editConfigForm').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    const fd = new FormData(this);
+    const id = fd.get('edit_id');
+    const body = {
+        name: fd.get('name'),
+        identifier: fd.get('identifier'),
+    };
+    const rawJson = fd.get('data_json');
+    if (rawJson && rawJson.trim()) {
+        try { body.data_json = JSON.parse(rawJson); } catch(e) { alert('JSON 格式错误'); return; }
+    }
+    if (CONFIG_TYPE === 'class_plans') {
+        body.time_layout_id = fd.get('time_layout_id');
+    }
+    const resp = await fetch(`${API_BASE}${id}/`, {
+        method: 'PUT',
+        headers: {'Content-Type': 'application/json', 'X-CSRFToken': csrfToken},
+        body: JSON.stringify(body),
+    });
+    if (resp.ok) {
+        bootstrap.Modal.getInstance(document.getElementById('editConfigModal')).hide();
+        loadConfigs();
+    } else {
+        const err = await resp.json();
+        alert(err.error || '保存失败');
+    }
+});
+
+async function deleteConfig() {
+    if (!confirm('确定删除此配置？')) return;
+    const id = document.getElementById('editId').value;
+    const resp = await fetch(`${API_BASE}${id}/`, {
+        method: 'DELETE',
+        headers: {'X-CSRFToken': csrfToken},
+    });
+    if (resp.ok) {
+        bootstrap.Modal.getInstance(document.getElementById('editConfigModal')).hide();
+        loadConfigs();
+    } else {
+        alert('删除失败');
+    }
+}
+
+loadConfigs();
+</script>
+{% endblock %}

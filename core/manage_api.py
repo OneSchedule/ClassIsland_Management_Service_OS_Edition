@@ -18,6 +18,8 @@ from rest_framework import status
 from core.models import (
     Organization, ClassGroup, Client, AuditLog,
     PendingCommand, CommandType, ConfigType, ConfigUploadRecord,
+    TimeLayoutConfig, SubjectConfig, ClassPlanConfig,
+    DefaultSettingsConfig, PolicyConfig, CredentialConfig, ComponentConfig,
 )
 from core.connection_manager import connection_manager
 from core.proto_gen.Protobuf.Server import ClientCommandDeliverScRsp_pb2
@@ -396,3 +398,132 @@ class ConfigUploadListAPI(APIView):
             "received_at": r.received_at.isoformat(),
         } for r in records]
         return Response(data)
+
+
+# ────────────────────────────────────────────────────
+# 通用配置 CRUD API
+# ────────────────────────────────────────────────────
+_CONFIG_MODEL_MAP = {
+    "time_layouts": TimeLayoutConfig,
+    "subjects": SubjectConfig,
+    "class_plans": ClassPlanConfig,
+    "default_settings": DefaultSettingsConfig,
+    "policy": PolicyConfig,
+    "credential": CredentialConfig,
+    "components": ComponentConfig,
+}
+
+
+class ConfigListAPI(APIView):
+    """GET / POST  /manage/api/configs/<config_type>/"""
+
+    def get(self, request, config_type):
+        Model = _CONFIG_MODEL_MAP.get(config_type)
+        if not Model:
+            return Response({"error": "未知配置类型"}, status=400)
+        items = Model.objects.all().order_by("-updated_at")
+        data = []
+        for item in items:
+            d = {
+                "id": item.id,
+                "name": item.name,
+                "identifier": item.identifier,
+                "data_json": item.data_json,
+                "created_at": item.created_at.isoformat(),
+                "updated_at": item.updated_at.isoformat(),
+            }
+            if config_type == "class_plans":
+                d["time_layout_id"] = item.time_layout_id
+                d["time_layout_name"] = item.time_layout.name if item.time_layout else ""
+            data.append(d)
+        return Response(data)
+
+    def post(self, request, config_type):
+        Model = _CONFIG_MODEL_MAP.get(config_type)
+        if not Model:
+            return Response({"error": "未知配置类型"}, status=400)
+        org = Organization.objects.first()
+        if not org:
+            return Response({"error": "请先创建组织"}, status=400)
+
+        name = request.data.get("name", "").strip()
+        identifier = request.data.get("identifier", "").strip()
+        if not name or not identifier:
+            return Response({"error": "name 和 identifier 必填"}, status=400)
+        if Model.objects.filter(identifier=identifier).exists():
+            return Response({"error": "标识已存在"}, status=400)
+
+        kwargs = {"organization": org, "name": name, "identifier": identifier}
+        data_json = request.data.get("data_json")
+        if data_json is not None:
+            kwargs["data_json"] = data_json
+
+        if config_type == "class_plans":
+            tl_id = request.data.get("time_layout_id")
+            if not tl_id:
+                return Response({"error": "课表必须选择一个时间表"}, status=400)
+            try:
+                kwargs["time_layout"] = TimeLayoutConfig.objects.get(pk=tl_id)
+            except TimeLayoutConfig.DoesNotExist:
+                return Response({"error": "时间表不存在"}, status=404)
+
+        obj = Model.objects.create(**kwargs)
+        return Response({"id": obj.id, "name": obj.name, "identifier": obj.identifier}, status=201)
+
+
+class ConfigDetailAPI(APIView):
+    """GET / PUT / DELETE  /manage/api/configs/<config_type>/<pk>/"""
+
+    def get(self, request, config_type, pk):
+        Model = _CONFIG_MODEL_MAP.get(config_type)
+        if not Model:
+            return Response({"error": "未知配置类型"}, status=400)
+        try:
+            obj = Model.objects.get(pk=pk)
+        except Model.DoesNotExist:
+            return Response({"error": "不存在"}, status=404)
+        d = {
+            "id": obj.id,
+            "name": obj.name,
+            "identifier": obj.identifier,
+            "data_json": obj.data_json,
+        }
+        if config_type == "class_plans":
+            d["time_layout_id"] = obj.time_layout_id
+            d["time_layout_name"] = obj.time_layout.name if obj.time_layout else ""
+        return Response(d)
+
+    def put(self, request, config_type, pk):
+        Model = _CONFIG_MODEL_MAP.get(config_type)
+        if not Model:
+            return Response({"error": "未知配置类型"}, status=400)
+        try:
+            obj = Model.objects.get(pk=pk)
+        except Model.DoesNotExist:
+            return Response({"error": "不存在"}, status=404)
+
+        data = request.data
+        if "name" in data:
+            obj.name = data["name"]
+        if "identifier" in data:
+            obj.identifier = data["identifier"]
+        if "data_json" in data:
+            obj.data_json = data["data_json"]
+        if config_type == "class_plans" and "time_layout_id" in data:
+            try:
+                obj.time_layout = TimeLayoutConfig.objects.get(pk=data["time_layout_id"])
+            except TimeLayoutConfig.DoesNotExist:
+                return Response({"error": "时间表不存在"}, status=404)
+        obj.save()
+        return Response({"message": "已更新"})
+
+    def delete(self, request, config_type, pk):
+        Model = _CONFIG_MODEL_MAP.get(config_type)
+        if not Model:
+            return Response({"error": "未知配置类型"}, status=400)
+        try:
+            obj = Model.objects.get(pk=pk)
+        except Model.DoesNotExist:
+            return Response({"error": "不存在"}, status=404)
+        obj.delete()
+        return Response({"message": "已删除"})

@@ -8,7 +8,7 @@ import uuid
 import hashlib
 import re
 import queue
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
 
 import grpc
 
@@ -350,6 +350,7 @@ class AuditService(Audit_pb2_grpc.AuditServicer):
 
     def LogEvent(self, request, context):
         from core.models import AuditLog
+        from django.utils import timezone as dj_timezone
 
         md = _get_metadata(context)
         cuid = md["cuid"]
@@ -360,7 +361,13 @@ class AuditService(Audit_pb2_grpc.AuditServicer):
                 Message="客户端未注册",
             )
 
-        ts = datetime.fromtimestamp(request.TimestampUtc, tz=timezone.utc)
+        # 兼容当前客户端实现：TimestampUtc 实际是“本地纪元秒”
+        # （DateTime.Now - new DateTime(1970,1,1,0,0,0)）。
+        # 需先还原为“本地墙上时间”，再转 UTC 入库，否则会出现 +8 重复偏移。
+        local_tz = dj_timezone.get_default_timezone()
+        local_wall_time = datetime(1970, 1, 1) + timedelta(seconds=request.TimestampUtc)
+        ts_local = dj_timezone.make_aware(local_wall_time, local_tz)
+        ts = ts_local.astimezone(timezone.utc)
         AuditLog.objects.create(
             client=client,
             event_type=request.Event,

@@ -26,6 +26,9 @@ manage_api_patterns = [
     path("manage/api/commands/broadcast/", manage_api.BroadcastCommandAPI.as_view(), name="api_broadcast"),
     path("manage/api/audit-logs/", manage_api.AuditLogListAPI.as_view(), name="api_audit_logs"),
     path("manage/api/config-uploads/", manage_api.ConfigUploadListAPI.as_view(), name="api_config_uploads"),
+    # ── 配置管理 API ──
+    path("manage/api/configs/<str:config_type>/", manage_api.ConfigListAPI.as_view(), name="api_config_list"),
+    path("manage/api/configs/<str:config_type>/<int:pk>/", manage_api.ConfigDetailAPI.as_view(), name="api_config_detail"),
 ]
 
 # ── 管理面板页面 ──
@@ -36,9 +39,13 @@ panel_patterns = [
     path("manage/groups/", panel_views.class_groups, name="class_groups"),
     path("manage/groups/<int:pk>/", panel_views.class_group_detail, name="class_group_detail"),
     path("manage/clients/", panel_views.clients, name="clients"),
+    path("manage/clients/download-management-settings-template/", panel_views.download_management_settings_template, name="download_management_settings_template"),
     path("manage/clients/<uuid:client_uid>/", panel_views.client_detail, name="client_detail"),
+    path("manage/clients/<uuid:client_uid>/download-management-settings/", panel_views.download_management_settings, name="download_management_settings"),
     path("manage/audit/", panel_views.audit_logs, name="audit_logs"),
     path("manage/commands/", panel_views.send_command, name="send_command"),
+    path("manage/configs/", panel_views.config_editor, name="config_editor"),
+    path("manage/configs/<str:config_type>/", panel_views.config_editor, name="config_editor_tab"),
     path("manage/settings/", panel_views.organization_settings, name="organization_settings"),
 ]
 

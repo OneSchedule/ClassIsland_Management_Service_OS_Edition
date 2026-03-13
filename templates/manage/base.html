@@ -95,6 +95,11 @@
                 </a>
             </li>
             <li class="nav-item">
+                <a class="nav-link {% if 'configs' in request.path %}active{% endif %}" href="{% url 'config_editor' %}">
+                    <i class="bi bi-sliders"></i> 编辑配置
+                </a>
+            </li>
+            <li class="nav-item">
                 <a class="nav-link {% if 'audit' in request.path %}active{% endif %}" href="{% url 'audit_logs' %}">
                     <i class="bi bi-journal-text"></i> 审计日志
                 </a>

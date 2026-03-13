@@ -24,6 +24,16 @@
                         <input type="text" name="core_version" class="form-control" value="{{ org.core_version }}">
                         <div class="form-text">主版本需与客户端一致，否则客户端拒绝连接</div>
                     </div>
+                    <div class="mb-3">
+                        <label class="form-label">HTTP 地址 (ManagementServer)</label>
+                        <input type="text" name="management_server" class="form-control" value="{{ org.management_server }}" placeholder="http://your-host:8000">
+                        <div class="form-text">用于客户端 HTTP API 请求基地址</div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">gRPC 地址 (ManagementServerGrpc)</label>
+                        <input type="text" name="management_server_grpc" class="form-control" value="{{ org.management_server_grpc }}" placeholder="http://your-host:50051">
+                        <div class="form-text">用于客户端 gRPC 通道连接地址</div>
+                    </div>
                     <button type="submit" class="btn btn-primary"><i class="bi bi-check-lg"></i> 保存</button>
                 </form>
             </div>
@@ -81,11 +91,11 @@
                     </tr>
                     <tr>
                         <td class="text-muted">HTTP 地址</td>
-                        <td><code>http://&lt;your-host&gt;:8000</code></td>
+                        <td><code>{{ org.management_server }}</code></td>
                     </tr>
                     <tr>
                         <td class="text-muted">gRPC 地址</td>
-                        <td><code>http://&lt;your-host&gt;:50051</code></td>
+                        <td><code>{{ org.management_server_grpc }}</code></td>
                     </tr>
                 </table>
             </div>
