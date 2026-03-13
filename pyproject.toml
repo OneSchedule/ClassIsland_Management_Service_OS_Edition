@@ -10,6 +10,8 @@ dependencies = [
     "djangorestframework>=3.16.1",
     "grpcio>=1.78.0",
     "grpcio-tools>=1.78.0",
+    "pgpy>=0.6.0",
     "protobuf>=6.33.5",
+    "standard-imghdr>=3.13.0",
     "whitenoise>=6.12.0",
 ]

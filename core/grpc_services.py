@@ -5,6 +5,9 @@ import asyncio
 import json
 import logging
 import uuid
+import hashlib
+import re
+import queue
 from datetime import datetime, timezone
 
 import grpc
@@ -37,6 +40,11 @@ logger = logging.getLogger(__name__)
 
 PROTOCOL_NAME = "Cyrene_MSP"
 PROTOCOL_VERSION = "2.0.0.0"
+
+
+def _u64(v: int) -> int:
+    """将有符号/无符号 64 位整数统一到无符号视图进行比较。"""
+    return int(v) & ((1 << 64) - 1)
 
 
 def _get_metadata(context) -> dict:
@@ -86,7 +94,7 @@ class ClientRegisterService(ClientRegister_pb2_grpc.ClientRegisterServicer):
         if keypair is None:
             return ClientRegisterScRsp_pb2.ClientRegisterScRsp(
                 Retcode=Retcode_pb2.ServerInternalError,
-                Message="服务器未生成密钥对",
+                Message="服务器未生成密钥对，请先执行 initserver",
             )
 
         # 查找或创建客户端
@@ -157,7 +165,22 @@ class HandshakeService(Handshake_pb2_grpc.HandshakeServicer):
         if keypair is None:
             return HandshakeScRsp_pb2.HandshakeScBeginHandShakeRsp(
                 Retcode=Retcode_pb2.ServerInternalError,
-                Message="服务器密钥未生成",
+                Message="服务器密钥未生成，请先执行 initserver",
+            )
+
+        # key id 对齐校验：不匹配通常意味着客户端缓存了旧公钥，需重新注册。
+        req_key_id = _u64(request.RequestedServerKeyId)
+        active_key_id = _u64(keypair.key_id)
+        if req_key_id != active_key_id:
+            logger.warning(
+                "握手 key id 不匹配: req=%s active=%s cuid=%s",
+                request.RequestedServerKeyId,
+                keypair.key_id,
+                cuid,
+            )
+            return HandshakeScRsp_pb2.HandshakeScBeginHandShakeRsp(
+                Retcode=Retcode_pb2.InvalidRequest,
+                Message="服务器密钥已变更，请客户端重新注册以刷新公钥",
             )
 
         # 解密挑战令牌
@@ -166,12 +189,26 @@ class HandshakeService(Handshake_pb2_grpc.HandshakeServicer):
                 keypair.private_key_armored,
                 request.ChallengeTokenEncrypted,
             )
+            # 客户端 challenge 是 base64 文本，理论上不含空白。
+            # 某些 OpenPGP 实现可能解出带换行/空字符，统一归一化避免误判。
+            normalized = (decrypted_token or "").replace("\x00", "")
+            normalized = re.sub(r"\s+", "", normalized)
+            decrypted_token = normalized
         except Exception as e:
             logger.error("解密挑战令牌失败: %s", e)
             return HandshakeScRsp_pb2.HandshakeScBeginHandShakeRsp(
                 Retcode=Retcode_pb2.ServerInternalError,
                 Message=f"解密失败: {e}",
             )
+
+        logger.info(
+            "Handshake challenge 解密成功: cuid=%s req_key=%s active_key=%s token_len=%d token_sha256_12=%s",
+            cuid,
+            request.RequestedServerKeyId,
+            keypair.key_id,
+            len(decrypted_token),
+            hashlib.sha256(decrypted_token.encode("utf-8", errors="ignore")).hexdigest()[:12],
+        )
 
         # 保存临时握手状态到 context（grpc-python 不支持跨 RPC 共享状态，
         # 这里将解密令牌放入客户端记录的 session 字段暂存）
@@ -224,15 +261,13 @@ class ClientCommandDeliverService(ClientCommandDeliver_pb2_grpc.ClientCommandDel
     def ListenCommand(self, request_iterator, context):
         md = _get_metadata(context)
         cuid = md["cuid"]
-        session = md["session"]
-
         client = _get_client_or_none(cuid)
         if client is None:
             context.abort(grpc.StatusCode.NOT_FOUND, "客户端未注册")
             return
 
         # 注册连接
-        queue = connection_manager.register(cuid)
+        cmd_queue = connection_manager.register(cuid)
         client.is_online = True
         from django.utils import timezone as tz
         client.last_seen = tz.now()
@@ -251,7 +286,7 @@ class ClientCommandDeliverService(ClientCommandDeliver_pb2_grpc.ClientCommandDel
                                 RetCode=Retcode_pb2.Success,
                                 Type=CommandTypes_pb2.Pong,
                             )
-                            queue.put_nowait(pong)
+                            cmd_queue.put_nowait(pong)
                             # 更新最后在线时间
                             from core.models import Client as C
                             C.objects.filter(client_uid=cuid).update(last_seen=tz.now())
@@ -262,14 +297,16 @@ class ClientCommandDeliverService(ClientCommandDeliver_pb2_grpc.ClientCommandDel
             reader.start()
 
             # 发送待下发命令
-            self._flush_pending_commands(cuid, queue)
+            self._flush_pending_commands(cuid, cmd_queue)
 
             # 主循环：从队列中取消息发给客户端
-            while not context.is_active() is False:
+            while context.is_active():
                 try:
-                    msg = queue.get(timeout=1.0)
+                    # 周期性冲刷 DB 中待发送命令，兼容 API 在任意线程创建 PendingCommand 的场景
+                    self._flush_pending_commands(cuid, cmd_queue)
+                    msg = cmd_queue.get(timeout=1.0)
                     yield msg
-                except Exception:
+                except queue.Empty:
                     if not context.is_active():
                         break
                     continue
@@ -288,6 +325,7 @@ class ClientCommandDeliverService(ClientCommandDeliver_pb2_grpc.ClientCommandDel
             pending = PendingCommand.objects.filter(
                 client=client, delivered=False
             ).order_by("created_at")
+            sent_count = 0
             for cmd in pending:
                 msg = ClientCommandDeliverScRsp_pb2.ClientCommandDeliverScRsp(
                     RetCode=Retcode_pb2.Success,
@@ -298,6 +336,9 @@ class ClientCommandDeliverService(ClientCommandDeliver_pb2_grpc.ClientCommandDel
                 cmd.delivered = True
                 cmd.delivered_at = tz.now()
                 cmd.save(update_fields=["delivered", "delivered_at"])
+                sent_count += 1
+            if sent_count:
+                logger.info("已冲刷待下发命令: cuid=%s count=%d", cuid, sent_count)
         except Exception as e:
             logger.error("发送待下发命令失败: %s", e)
 

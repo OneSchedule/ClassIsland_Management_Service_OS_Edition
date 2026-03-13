@@ -92,9 +92,9 @@ def clients(request):
 
 
 @login_required
-def client_detail(request, pk):
+def client_detail(request, client_uid):
     """客户端详情"""
-    client = get_object_or_404(Client.objects.select_related("class_group"), pk=pk)
+    client = get_object_or_404(Client.objects.select_related("class_group"), client_uid=client_uid)
     groups = ClassGroup.objects.all()
     if request.method == "POST":
         group_id = request.POST.get("class_group_id")
@@ -104,7 +104,7 @@ def client_detail(request, pk):
             client.status = int(status_val)
         client.save()
         messages.success(request, "已更新")
-        return redirect("client_detail", pk=pk)
+        return redirect("client_detail", client_uid=client.client_uid)
     audit_logs = AuditLog.objects.filter(client=client).order_by("-timestamp_utc")[:20]
     return render(request, "manage/client_detail.html", {
         "client": client,

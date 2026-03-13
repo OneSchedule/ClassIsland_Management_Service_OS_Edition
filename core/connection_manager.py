@@ -1,12 +1,19 @@
 """
 在线客户端连接管理 —— 跟踪活跃的 gRPC 双向流连接。
 """
-import asyncio
 import logging
+import queue
 import threading
-from collections import defaultdict
+import uuid
 
 logger = logging.getLogger(__name__)
+
+
+def _normalize_uid(client_uid: str) -> str:
+    try:
+        return str(uuid.UUID(str(client_uid)))
+    except Exception:
+        return str(client_uid).strip().lower()
 
 
 class ConnectionManager:
@@ -17,24 +24,27 @@ class ConnectionManager:
 
     def __init__(self):
         self._lock = threading.Lock()
-        # client_uid -> asyncio.Queue for pending server->client messages
-        self._queues: dict[str, asyncio.Queue] = {}
+        # client_uid -> queue.Queue for pending server->client messages
+        self._queues: dict[str, queue.Queue] = {}
 
-    def register(self, client_uid: str) -> asyncio.Queue:
+    def register(self, client_uid: str) -> queue.Queue:
+        normalized_uid = _normalize_uid(client_uid)
         with self._lock:
-            q = asyncio.Queue()
-            self._queues[client_uid] = q
-            logger.info("Client %s connected to command stream", client_uid)
+            q = queue.Queue()
+            self._queues[normalized_uid] = q
+            logger.info("Client %s connected to command stream", normalized_uid)
             return q
 
     def unregister(self, client_uid: str):
+        normalized_uid = _normalize_uid(client_uid)
         with self._lock:
-            self._queues.pop(client_uid, None)
-            logger.info("Client %s disconnected from command stream", client_uid)
+            self._queues.pop(normalized_uid, None)
+            logger.info("Client %s disconnected from command stream", normalized_uid)
 
     def is_connected(self, client_uid: str) -> bool:
+        normalized_uid = _normalize_uid(client_uid)
         with self._lock:
-            return client_uid in self._queues
+            return normalized_uid in self._queues
 
     def get_connected_uids(self) -> list[str]:
         with self._lock:
@@ -42,8 +52,9 @@ class ConnectionManager:
 
     def enqueue_command(self, client_uid: str, message) -> bool:
         """将命令放入客户端的队列，返回是否成功"""
+        normalized_uid = _normalize_uid(client_uid)
         with self._lock:
-            q = self._queues.get(client_uid)
+            q = self._queues.get(normalized_uid)
             if q is None:
                 return False
             q.put_nowait(message)

@@ -19,6 +19,15 @@ import hashlib
 import time
 import os
 
+import pgpy
+from pgpy.constants import (
+    PubKeyAlgorithm,
+    KeyFlags,
+    HashAlgorithm,
+    SymmetricKeyAlgorithm,
+    CompressionAlgorithm,
+)
+
 from cryptography.hazmat.primitives.asymmetric import rsa, padding
 from cryptography.hazmat.primitives import serialization, hashes
 
@@ -112,32 +121,44 @@ def _crc24(data):
 
 
 def generate_server_keypair(organization: Organization) -> ServerKeyPair:
-    """为组织生成 RSA 密钥对并保存"""
+    """为组织生成标准 OpenPGP RSA 密钥对并保存"""
     # 停用旧密钥
     ServerKeyPair.objects.filter(
         organization=organization, is_active=True
     ).update(is_active=False)
 
-    private_key = rsa.generate_private_key(
-        public_exponent=65537,
-        key_size=2048,
+    key = pgpy.PGPKey.new(
+        PubKeyAlgorithm.RSAEncryptOrSign,
+        2048,
+    )
+    uid = pgpy.PGPUID.new("ClassIsland Server", email="server@classisland")
+    key.add_uid(
+        uid,
+        usage={KeyFlags.Sign, KeyFlags.EncryptCommunications, KeyFlags.EncryptStorage},
+        hashes=[HashAlgorithm.SHA256, HashAlgorithm.SHA384, HashAlgorithm.SHA512],
+        ciphers=[
+            SymmetricKeyAlgorithm.AES256,
+            SymmetricKeyAlgorithm.AES192,
+            SymmetricKeyAlgorithm.AES128,
+        ],
+        compression=[
+            CompressionAlgorithm.ZLIB,
+            CompressionAlgorithm.ZIP,
+            CompressionAlgorithm.Uncompressed,
+        ],
     )
 
-    # 私钥 PEM
-    priv_pem = private_key.private_bytes(
-        encoding=serialization.Encoding.PEM,
-        format=serialization.PrivateFormat.PKCS8,
-        encryption_algorithm=serialization.NoEncryption(),
-    ).decode('utf-8')
+    priv_armored = str(key)
+    pub_armored = str(key.pubkey)
 
-    # 公钥 PGP Armored
-    pub_armored, key_id = _rsa_pubkey_to_pgp_armored(private_key.public_key())
+    key_id_hex = str(key.fingerprint.keyid)
+    key_id = int(key_id_hex, 16)
 
     kp = ServerKeyPair.objects.create(
         organization=organization,
         key_id=key_id,
         public_key_armored=pub_armored,
-        private_key_armored=priv_pem,
+        private_key_armored=priv_armored,
         is_active=True,
     )
     return kp
@@ -148,6 +169,32 @@ def get_active_keypair(organization: Organization) -> ServerKeyPair | None:
     return ServerKeyPair.objects.filter(
         organization=organization, is_active=True
     ).first()
+
+
+def _is_pgp_public_key(text: str) -> bool:
+    return "-----BEGIN PGP PUBLIC KEY BLOCK-----" in (text or "")
+
+
+def _is_pgp_private_key(text: str) -> bool:
+    return "-----BEGIN PGP PRIVATE KEY BLOCK-----" in (text or "")
+
+
+def _is_pem_private_key(text: str) -> bool:
+    t = text or ""
+    return (
+        "-----BEGIN PRIVATE KEY-----" in t
+        or "-----BEGIN RSA PRIVATE KEY-----" in t
+    )
+
+
+def ensure_active_keypair(organization: Organization) -> ServerKeyPair:
+    """确保活跃密钥是可用于 PgpCore 的标准 OpenPGP 格式。"""
+    kp = get_active_keypair(organization)
+    if kp is None:
+        return generate_server_keypair(organization)
+    if not _is_pgp_public_key(kp.public_key_armored) or not _is_pgp_private_key(kp.private_key_armored):
+        return generate_server_keypair(organization)
+    return kp
 
 
 def decrypt_with_private_key(private_key_pem: str, encrypted_text: str) -> str:
@@ -161,11 +208,30 @@ def decrypt_with_private_key(private_key_pem: str, encrypted_text: str) -> str:
     简化实现：如果加密数据是 base64 编码的 RSA 密文，直接解密。
     如果是 PGP armored 格式，先提取密文再解密。
     """
+    # 优先：标准 OpenPGP 私钥解密（与客户端 PgpCore 保持一致）
+    if _is_pgp_private_key(private_key_pem):
+        try:
+            pgp_priv, _ = pgpy.PGPKey.from_blob(private_key_pem)
+            msg = pgpy.PGPMessage.from_blob((encrypted_text or "").strip())
+            dec = pgp_priv.decrypt(msg)
+            content = dec.message
+            if isinstance(content, (bytes, bytearray, memoryview)):
+                return bytes(content).decode("utf-8", errors="replace")
+            return str(content)
+        except Exception as e:
+            # 这里不应回退到 PEM：当前私钥本来就是 PGP 格式。
+            raise ValueError(f"PGP 解密失败: {e}")
+
+    # 历史兼容：仅当私钥确实是 PEM 时，才走旧的 RSA/手写 OpenPGP 回退逻辑
+    if not _is_pem_private_key(private_key_pem):
+        raise ValueError("无法识别的私钥格式（既不是 PGP 私钥也不是 PEM 私钥）")
+
     private_key = serialization.load_pem_private_key(
         private_key_pem.encode('utf-8'), password=None,
     )
 
     # 尝试解析 PGP Armored 格式
+    pgp_error = None
     if "-----BEGIN PGP MESSAGE-----" in encrypted_text:
         # 提取 base64 内容
         lines = encrypted_text.strip().split('\n')
@@ -189,18 +255,25 @@ def decrypt_with_private_key(private_key_pem: str, encrypted_text: str) -> str:
         try:
             plaintext = _decrypt_pgp_message(private_key, pgp_data)
             return plaintext
-        except Exception:
-            pass
+        except Exception as e:
+            pgp_error = e
 
     # Fallback: 尝试 base64 解码后直接 RSA 解密
     try:
         ciphertext = base64.b64decode(encrypted_text)
+        key_size_bytes = (private_key.key_size + 7) // 8
+        if len(ciphertext) < key_size_bytes:
+            ciphertext = ciphertext.rjust(key_size_bytes, b'\x00')
+        elif len(ciphertext) > key_size_bytes:
+            ciphertext = ciphertext[-key_size_bytes:]
         plaintext = private_key.decrypt(
             ciphertext,
             padding.PKCS1v15(),
         )
         return plaintext.decode('utf-8')
     except Exception as e:
+        if pgp_error is not None:
+            raise ValueError(f"无法解密: OpenPGP 解析失败({pgp_error}); RSA 直解失败({e})")
         raise ValueError(f"无法解密: {e}")
 
 
@@ -264,6 +337,14 @@ def _decrypt_pgp_message(private_key, pgp_data: bytes) -> str:
             mpi_offset += 2
             byte_count = (bit_count + 7) // 8
             encrypted_mpi = pkt_body[mpi_offset:mpi_offset+byte_count]
+
+            # OpenPGP 的 MPI 可能会省略前导 0x00；
+            # cryptography 的 RSA decrypt 要求密文长度必须等于密钥字节长度。
+            key_size_bytes = (private_key.key_size + 7) // 8
+            if len(encrypted_mpi) < key_size_bytes:
+                encrypted_mpi = encrypted_mpi.rjust(key_size_bytes, b'\x00')
+            elif len(encrypted_mpi) > key_size_bytes:
+                encrypted_mpi = encrypted_mpi[-key_size_bytes:]
 
             # RSA decrypt
             decrypted = private_key.decrypt(encrypted_mpi, padding.PKCS1v15())

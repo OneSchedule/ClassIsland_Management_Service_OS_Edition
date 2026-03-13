@@ -28,6 +28,40 @@ from core.proto_gen.Protobuf.Command import (
 )
 
 
+def _to_bool(value, default=False):
+    if value is None:
+        return default
+    if isinstance(value, bool):
+        return value
+    if isinstance(value, (int, float)):
+        return value != 0
+    if isinstance(value, str):
+        v = value.strip().lower()
+        if v in {"1", "true", "yes", "on"}:
+            return True
+        if v in {"0", "false", "no", "off", ""}:
+            return False
+    return default
+
+
+def _to_int(value, default=0):
+    try:
+        if value is None or value == "":
+            return default
+        return int(value)
+    except (TypeError, ValueError):
+        return default
+
+
+def _to_float(value, default=0.0):
+    try:
+        if value is None or value == "":
+            return default
+        return float(value)
+    except (TypeError, ValueError):
+        return default
+
+
 class DashboardStatsAPI(LoginRequiredMixin, View):
     """GET /manage/api/stats — 仪表盘统计"""
 
@@ -222,7 +256,9 @@ class SendCommandAPI(APIView):
         except Client.DoesNotExist:
             return Response({"error": "客户端不存在"}, status=404)
 
-        cmd_type = int(command_type)
+        cmd_type = _to_int(command_type, -1)
+        if cmd_type < 0:
+            return Response({"error": "command_type 无效"}, status=400)
         payload = b""
 
         # 构建特殊命令的 payload
@@ -230,18 +266,18 @@ class SendCommandAPI(APIView):
             notif = SendNotification_pb2.SendNotification(
                 MessageMask=request.data.get("message_mask", ""),
                 MessageContent=request.data.get("message_content", ""),
-                IsEmergency=request.data.get("is_emergency", False),
-                DurationSeconds=float(request.data.get("duration_seconds", 5.0)),
-                RepeatCounts=int(request.data.get("repeat_counts", 1)),
-                IsSpeechEnabled=request.data.get("is_speech_enabled", False),
-                IsEffectEnabled=request.data.get("is_effect_enabled", True),
-                IsSoundEnabled=request.data.get("is_sound_enabled", True),
-                IsTopmost=request.data.get("is_topmost", False),
+                IsEmergency=_to_bool(request.data.get("is_emergency"), False),
+                DurationSeconds=_to_float(request.data.get("duration_seconds"), 5.0),
+                RepeatCounts=_to_int(request.data.get("repeat_counts"), 1),
+                IsSpeechEnabled=_to_bool(request.data.get("is_speech_enabled"), False),
+                IsEffectEnabled=_to_bool(request.data.get("is_effect_enabled"), True),
+                IsSoundEnabled=_to_bool(request.data.get("is_sound_enabled"), True),
+                IsTopmost=_to_bool(request.data.get("is_topmost"), False),
             )
             payload = notif.SerializeToString()
 
         elif cmd_type == CommandType.GET_CLIENT_CONFIG:
-            config_type = int(request.data.get("config_type", 0))
+            config_type = _to_int(request.data.get("config_type"), 0)
             req_guid = str(uuid.uuid4())
             get_cfg = GetClientConfig_pb2.GetClientConfig(
                 RequestGuid=req_guid,
@@ -249,26 +285,42 @@ class SendCommandAPI(APIView):
             )
             payload = get_cfg.SerializeToString()
 
-        # 尝试直接推送给在线客户端
+        # 先持久化命令，兼容 runserver / grpcserver 分进程部署
+        pending = PendingCommand.objects.create(
+            client=client,
+            command_type=cmd_type,
+            payload=payload,
+        )
+
+        # 尝试直接推送给在线客户端（仅当前进程内可见连接）
         cuid = str(client.client_uid)
         msg = ClientCommandDeliverScRsp_pb2.ClientCommandDeliverScRsp(
             RetCode=Retcode_pb2.Success,
             Type=cmd_type,
             Payload=payload,
         )
-        delivered = connection_manager.enqueue_command(cuid, msg)
+        delivered_now = connection_manager.enqueue_command(cuid, msg)
 
-        if not delivered:
-            # 客户端离线，存入队列
-            PendingCommand.objects.create(
-                client=client,
-                command_type=cmd_type,
-                payload=payload,
-            )
+        # 本进程内已直推，标记为已送达
+        if delivered_now:
+            from django.utils import timezone as tz
+            pending.delivered = True
+            pending.delivered_at = tz.now()
+            pending.save(update_fields=["delivered", "delivered_at"])
+
+        likely_online = bool(client.is_online)
+        if delivered_now:
+            message = "已发送"
+        elif likely_online:
+            message = "客户端在线（跨进程），已加入队列待下发"
+        else:
+            message = "客户端离线，已加入队列"
 
         return Response({
-            "message": "已发送" if delivered else "客户端离线，已加入队列",
-            "delivered": delivered,
+            "message": message,
+            "delivered": delivered_now,
+            "queued": True,
+            "client_online": likely_online,
         })
 
 
