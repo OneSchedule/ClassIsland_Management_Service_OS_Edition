@@ -165,15 +165,19 @@
                                 </div>
                             </div>
                         </div>
-                        {% elif active_tab == 'components' %}
+                        {% elif active_tab == 'components' or active_tab == 'class_plans' or active_tab == 'time_layouts' or active_tab == 'subjects' %}
                         <div class="mb-2">
                             <div class="input-group">
-                                <input type="file" class="form-control" id="addComponentJsonFile" accept=".json,application/json">
-                                <button type="button" class="btn btn-outline-secondary" onclick="importComponentJson('add')">
+                                <input type="file" class="form-control" id="addImportJsonFile" accept=".json,application/json">
+                                <button type="button" class="btn btn-outline-secondary" onclick="importConfigJson('add')">
                                     <i class="bi bi-upload"></i> 从 JSON 导入
                                 </button>
                             </div>
+                            {% if active_tab == 'class_plans' or active_tab == 'time_layouts' or active_tab == 'subjects' %}
+                            <div class="form-text">导入后会自动按当前标签保留字段：课表仅保留 `ClassPlans`，时间表仅保留 `TimeLayouts`，科目仅保留 `Subjects`（并保留 `Name` 与空占位结构）。</div>
+                            {% else %}
                             <div class="form-text">选择一个 JSON 文件，导入后将自动填充下方内容。</div>
+                            {% endif %}
                         </div>
                         <textarea name="data_json" id="addDataJson" class="form-control font-monospace" rows="8" placeholder="{}"></textarea>
                         {% else %}
@@ -309,15 +313,19 @@
                                 </div>
                             </div>
                         </div>
-                        {% elif active_tab == 'components' %}
+                        {% elif active_tab == 'components' or active_tab == 'class_plans' or active_tab == 'time_layouts' or active_tab == 'subjects' %}
                         <div class="mb-2">
                             <div class="input-group">
-                                <input type="file" class="form-control" id="editComponentJsonFile" accept=".json,application/json">
-                                <button type="button" class="btn btn-outline-secondary" onclick="importComponentJson('edit')">
+                                <input type="file" class="form-control" id="editImportJsonFile" accept=".json,application/json">
+                                <button type="button" class="btn btn-outline-secondary" onclick="importConfigJson('edit')">
                                     <i class="bi bi-upload"></i> 从 JSON 导入
                                 </button>
                             </div>
+                            {% if active_tab == 'class_plans' or active_tab == 'time_layouts' or active_tab == 'subjects' %}
+                            <div class="form-text">导入后会自动按当前标签保留字段：课表仅保留 `ClassPlans`，时间表仅保留 `TimeLayouts`，科目仅保留 `Subjects`（并保留 `Name` 与空占位结构）。</div>
+                            {% else %}
                             <div class="form-text">选择一个 JSON 文件，导入后将自动填充下方内容。</div>
+                            {% endif %}
                         </div>
                         <textarea name="data_json" id="editDataJson" class="form-control font-monospace" rows="12"></textarea>
                         {% else %}
@@ -407,8 +415,45 @@ function fillCredentialData(prefix, data) {
     });
 }
 
-function importComponentJson(prefix) {
-    const fileInputId = prefix === 'add' ? 'addComponentJsonFile' : 'editComponentJsonFile';
+function toPlainObject(value) {
+    return value && typeof value === 'object' && !Array.isArray(value) ? value : {};
+}
+
+function sanitizeScheduleImportData(source, targetType) {
+    const base = {
+        Name: typeof source?.Name === 'string' ? source.Name : '',
+        TimeLayouts: {},
+        ClassPlans: {},
+        Subjects: {},
+    };
+
+    const hasWrapper = ['TimeLayouts', 'ClassPlans', 'Subjects'].some(key =>
+        Object.prototype.hasOwnProperty.call(source, key)
+    );
+
+    if (targetType === 'class_plans') {
+        base.ClassPlans = hasWrapper ? toPlainObject(source.ClassPlans) : toPlainObject(source);
+    } else if (targetType === 'time_layouts') {
+        base.TimeLayouts = hasWrapper ? toPlainObject(source.TimeLayouts) : toPlainObject(source);
+    } else if (targetType === 'subjects') {
+        base.Subjects = hasWrapper ? toPlainObject(source.Subjects) : toPlainObject(source);
+    }
+
+    return base;
+}
+
+function sanitizeImportedData(parsed) {
+    if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) {
+        throw new Error('导入失败：JSON 顶层必须是对象');
+    }
+    if (CONFIG_TYPE === 'class_plans' || CONFIG_TYPE === 'time_layouts' || CONFIG_TYPE === 'subjects') {
+        return sanitizeScheduleImportData(parsed, CONFIG_TYPE);
+    }
+    return parsed;
+}
+
+function importConfigJson(prefix) {
+    const fileInputId = prefix === 'add' ? 'addImportJsonFile' : 'editImportJsonFile';
     const textareaId = prefix === 'add' ? 'addDataJson' : 'editDataJson';
     const input = document.getElementById(fileInputId);
     const textarea = document.getElementById(textareaId);
@@ -423,9 +468,10 @@ function importComponentJson(prefix) {
         try {
             const text = String(reader.result || '');
             const parsed = JSON.parse(text);
-            textarea.value = JSON.stringify(parsed, null, 2);
-        } catch {
-            alert('导入失败：文件不是有效的 JSON');
+            const sanitized = sanitizeImportedData(parsed);
+            textarea.value = JSON.stringify(sanitized, null, 2);
+        } catch (e) {
+            alert(e?.message || '导入失败：文件不是有效的 JSON');
         }
     };
     reader.onerror = () => alert('读取文件失败');
