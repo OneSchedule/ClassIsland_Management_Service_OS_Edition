@@ -165,6 +165,92 @@
                                 </div>
                             </div>
                         </div>
+                        {% elif active_tab == 'default_settings' %}
+                        <div class="mb-2">
+                            <div class="input-group">
+                                <input type="file" class="form-control" id="addDefaultSettingsJsonFile" accept=".json,application/json">
+                                <button type="button" class="btn btn-outline-secondary" onclick="importConfigJson('add')">
+                                    <i class="bi bi-upload"></i> 从 JSON 导入
+                                </button>
+                            </div>
+                            <div class="form-text">导入后会按默认设置字段白名单自动回填到下方表单。</div>
+                        </div>
+                        <div class="row g-3 mt-1" id="addDefaultSettingsFields">
+                            <div class="col-md-4"><label class="form-label">主题</label><select class="form-select" id="addTheme"><option value="0">跟随系统</option><option value="1">明亮</option><option value="2">黑暗</option></select></div>
+                            <div class="col-md-4"><label class="form-label">托盘点击行为</label><select class="form-select" id="addTaskBarIconClickBehavior"><option value="0">打开主菜单</option><option value="1">打开档案编辑</option><option value="2">显示/隐藏主界面</option><option value="3">打开换课窗口</option><option value="4">打开设置窗口</option></select></div>
+                            <div class="col-md-4"><label class="form-label">窗口停靠位置</label><select class="form-select" id="addWindowDockingLocation"><option value="0">左上角</option><option value="1">中上侧</option><option value="2">右上角</option><option value="3">左下角</option><option value="4">中下侧</option><option value="5">右下角</option></select></div>
+
+                            <div class="col-md-4"><label class="form-label">窗口层级</label><select class="form-select" id="addWindowLayer"><option value="0">置底</option><option value="1">置顶</option></select></div>
+                            <div class="col-md-4"><label class="form-label">背景不透明度</label><input type="number" class="form-control" id="addOpacity" min="0" max="1" step="0.05"></div>
+                            <div class="col-md-4"><label class="form-label">界面缩放</label><input type="number" class="form-control" id="addScale" min="0.5" max="3" step="0.05"></div>
+
+                            <div class="col-md-4"><label class="form-label">上课前提醒秒数</label><input type="number" class="form-control" id="addClassPrepareNotifySeconds" min="0" step="1"></div>
+                            <div class="col-md-4"><label class="form-label">倒计时秒数</label><input type="number" class="form-control" id="addCountdownSeconds" min="0" step="1"></div>
+                            <div class="col-md-4"><label class="form-label">课表行间距</label><input type="number" class="form-control" id="addScheduleSpacing" min="0" max="10" step="0.1"></div>
+
+                            <div class="col-md-12"><label class="form-label">启动页自定义文本</label><input type="text" class="form-control" id="addSplashCustomText" maxlength="200"></div>
+
+                            <div class="col-md-3"><div class="form-check"><input class="form-check-input" type="checkbox" id="addIsMainWindowVisible"><label class="form-check-label" for="addIsMainWindowVisible">显示主界面</label></div></div>
+                            <div class="col-md-3"><div class="form-check"><input class="form-check-input" type="checkbox" id="addShowDate"><label class="form-check-label" for="addShowDate">显示日期</label></div></div>
+                            <div class="col-md-3"><div class="form-check"><input class="form-check-input" type="checkbox" id="addHideOnClass"><label class="form-check-label" for="addHideOnClass">上课时隐藏</label></div></div>
+                            <div class="col-md-3"><div class="form-check"><input class="form-check-input" type="checkbox" id="addHideOnFullscreen"><label class="form-check-label" for="addHideOnFullscreen">全屏时隐藏</label></div></div>
+
+                            <div class="col-md-3"><div class="form-check"><input class="form-check-input" type="checkbox" id="addHideOnMaxWindow"><label class="form-check-label" for="addHideOnMaxWindow">窗口最大化时隐藏</label></div></div>
+                            <div class="col-md-3"><div class="form-check"><input class="form-check-input" type="checkbox" id="addIsClassPrepareNotificationEnabled"><label class="form-check-label" for="addIsClassPrepareNotificationEnabled">启用课前提醒</label></div></div>
+                            <div class="col-md-3"><div class="form-check"><input class="form-check-input" type="checkbox" id="addIsClassChangingNotificationEnabled"><label class="form-check-label" for="addIsClassChangingNotificationEnabled">启用上下课提醒</label></div></div>
+                            <div class="col-md-3"><div class="form-check"><input class="form-check-input" type="checkbox" id="addIsClassOffNotificationEnabled"><label class="form-check-label" for="addIsClassOffNotificationEnabled">启用下课提醒</label></div></div>
+
+                            <div class="col-md-3"><div class="form-check"><input class="form-check-input" type="checkbox" id="addIsCountdownEnabled"><label class="form-check-label" for="addIsCountdownEnabled">启用倒计时</label></div></div>
+                            <div class="col-md-3"><div class="form-check"><input class="form-check-input" type="checkbox" id="addIsSplashEnabled"><label class="form-check-label" for="addIsSplashEnabled">启用启动页</label></div></div>
+                            <div class="col-md-3"><div class="form-check"><input class="form-check-input" type="checkbox" id="addIsNotificationEnabled"><label class="form-check-label" for="addIsNotificationEnabled">启用通知</label></div></div>
+                            <div class="col-md-3"><div class="form-check"><input class="form-check-input" type="checkbox" id="addIsSpeechEnabled"><label class="form-check-label" for="addIsSpeechEnabled">启用语音</label></div></div>
+
+                            <div class="col-md-3"><div class="form-check"><input class="form-check-input" type="checkbox" id="addIsAutomationEnabled"><label class="form-check-label" for="addIsAutomationEnabled">启用自动化</label></div></div>
+                            <div class="col-md-3"><div class="form-check"><input class="form-check-input" type="checkbox" id="addIsAutomationWarningVisible"><label class="form-check-label" for="addIsAutomationWarningVisible">显示自动化警告</label></div></div>
+
+                            <div class="col-12 mt-2">
+                                <div class="accordion" id="addDefaultSettingsAdvancedAccordion">
+                                    <div class="accordion-item">
+                                        <h2 class="accordion-header" id="addAdvancedHeadingOne">
+                                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#addAdvancedCollapseOne" aria-expanded="false" aria-controls="addAdvancedCollapseOne">
+                                                高级字段（通知 / 语音 / 时间 / 更新）
+                                            </button>
+                                        </h2>
+                                        <div id="addAdvancedCollapseOne" class="accordion-collapse collapse" aria-labelledby="addAdvancedHeadingOne" data-bs-parent="#addDefaultSettingsAdvancedAccordion">
+                                            <div class="accordion-body">
+                                                <div class="row g-3">
+                                                    <div class="col-md-3"><div class="form-check"><input class="form-check-input" type="checkbox" id="addIsNotificationEffectEnabled"><label class="form-check-label" for="addIsNotificationEffectEnabled">通知动效</label></div></div>
+                                                    <div class="col-md-3"><div class="form-check"><input class="form-check-input" type="checkbox" id="addIsNotificationSoundEnabled"><label class="form-check-label" for="addIsNotificationSoundEnabled">通知声音</label></div></div>
+                                                    <div class="col-md-3"><div class="form-check"><input class="form-check-input" type="checkbox" id="addIsNotificationTopmostEnabled"><label class="form-check-label" for="addIsNotificationTopmostEnabled">通知置顶</label></div></div>
+                                                    <div class="col-md-3"><div class="form-check"><input class="form-check-input" type="checkbox" id="addIsExactTimeEnabled"><label class="form-check-label" for="addIsExactTimeEnabled">精确时间</label></div></div>
+
+                                                    <div class="col-md-3"><label class="form-label">语音来源</label><select class="form-select" id="addSpeechSource"><option value="0">系统</option><option value="1">备用</option><option value="2">自定义</option></select></div>
+                                                    <div class="col-md-3"><label class="form-label">语音音量</label><input type="number" class="form-control" id="addSpeechVolume" min="0" max="1" step="0.05"></div>
+                                                    <div class="col-md-3"><label class="form-label">通知音量</label><input type="number" class="form-control" id="addNotificationSoundVolume" min="0" max="1" step="0.05"></div>
+                                                    <div class="col-md-3"><label class="form-label">更新时间策略</label><select class="form-select" id="addUpdateMode"><option value="0">关闭</option><option value="1">手动</option><option value="2">提醒</option><option value="3">自动</option></select></div>
+
+                                                    <div class="col-md-4"><label class="form-label">时间服务器</label><input type="text" class="form-control" id="addExactTimeServer"></div>
+                                                    <div class="col-md-4"><label class="form-label">时间偏移（秒）</label><input type="number" class="form-control" id="addTimeOffsetSeconds" step="0.1"></div>
+                                                    <div class="col-md-4"><label class="form-label">自动校时偏移（秒）</label><input type="number" class="form-control" id="addTimeAutoAdjustSeconds" step="0.1"></div>
+
+                                                    <div class="col-md-3"><div class="form-check"><input class="form-check-input" type="checkbox" id="addIsTimeAutoAdjustEnabled"><label class="form-check-label" for="addIsTimeAutoAdjustEnabled">启用自动校时</label></div></div>
+                                                    <div class="col-md-3"><div class="form-check"><input class="form-check-input" type="checkbox" id="addIsWallpaperAutoUpdateEnabled"><label class="form-check-label" for="addIsWallpaperAutoUpdateEnabled">自动更新壁纸色</label></div></div>
+                                                    <div class="col-md-3"><div class="form-check"><input class="form-check-input" type="checkbox" id="addIsFallbackModeEnabled"><label class="form-check-label" for="addIsFallbackModeEnabled">降级模式</label></div></div>
+                                                    <div class="col-md-3"><label class="form-label">壁纸更新间隔（秒）</label><input type="number" class="form-control" id="addWallpaperAutoUpdateIntervalSeconds" min="0" step="1"></div>
+
+                                                    <div class="col-md-4"><label class="form-label">城市 ID</label><input type="text" class="form-control" id="addCityId"></div>
+                                                    <div class="col-md-4"><label class="form-label">城市名称</label><input type="text" class="form-control" id="addCityName"></div>
+                                                    <div class="col-md-4"><label class="form-label">更新通道 V2</label><input type="text" class="form-control" id="addSelectedUpdateChannelV2"></div>
+
+                                                    <div class="col-md-6"><label class="form-label">组件配置方案</label><input type="text" class="form-control" id="addCurrentComponentConfig"></div>
+                                                    <div class="col-md-6"><label class="form-label">自动化配置方案</label><input type="text" class="form-control" id="addCurrentAutomationConfig"></div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                         {% elif active_tab == 'components' or active_tab == 'class_plans' or active_tab == 'time_layouts' or active_tab == 'subjects' %}
                         <div class="mb-2">
                             <div class="input-group">
@@ -313,6 +399,92 @@
                                 </div>
                             </div>
                         </div>
+                        {% elif active_tab == 'default_settings' %}
+                        <div class="mb-2">
+                            <div class="input-group">
+                                <input type="file" class="form-control" id="editDefaultSettingsJsonFile" accept=".json,application/json">
+                                <button type="button" class="btn btn-outline-secondary" onclick="importConfigJson('edit')">
+                                    <i class="bi bi-upload"></i> 从 JSON 导入
+                                </button>
+                            </div>
+                            <div class="form-text">导入后会按默认设置字段白名单自动回填到下方表单。</div>
+                        </div>
+                        <div class="row g-3 mt-1" id="editDefaultSettingsFields">
+                            <div class="col-md-4"><label class="form-label">主题</label><select class="form-select" id="editTheme"><option value="0">跟随系统</option><option value="1">明亮</option><option value="2">黑暗</option></select></div>
+                            <div class="col-md-4"><label class="form-label">托盘点击行为</label><select class="form-select" id="editTaskBarIconClickBehavior"><option value="0">打开主菜单</option><option value="1">打开档案编辑</option><option value="2">显示/隐藏主界面</option><option value="3">打开换课窗口</option><option value="4">打开设置窗口</option></select></div>
+                            <div class="col-md-4"><label class="form-label">窗口停靠位置</label><select class="form-select" id="editWindowDockingLocation"><option value="0">左上角</option><option value="1">中上侧</option><option value="2">右上角</option><option value="3">左下角</option><option value="4">中下侧</option><option value="5">右下角</option></select></div>
+
+                            <div class="col-md-4"><label class="form-label">窗口层级</label><select class="form-select" id="editWindowLayer"><option value="0">置底</option><option value="1">置顶</option></select></div>
+                            <div class="col-md-4"><label class="form-label">背景不透明度</label><input type="number" class="form-control" id="editOpacity" min="0" max="1" step="0.05"></div>
+                            <div class="col-md-4"><label class="form-label">界面缩放</label><input type="number" class="form-control" id="editScale" min="0.5" max="3" step="0.05"></div>
+
+                            <div class="col-md-4"><label class="form-label">上课前提醒秒数</label><input type="number" class="form-control" id="editClassPrepareNotifySeconds" min="0" step="1"></div>
+                            <div class="col-md-4"><label class="form-label">倒计时秒数</label><input type="number" class="form-control" id="editCountdownSeconds" min="0" step="1"></div>
+                            <div class="col-md-4"><label class="form-label">课表行间距</label><input type="number" class="form-control" id="editScheduleSpacing" min="0" max="10" step="0.1"></div>
+
+                            <div class="col-md-12"><label class="form-label">启动页自定义文本</label><input type="text" class="form-control" id="editSplashCustomText" maxlength="200"></div>
+
+                            <div class="col-md-3"><div class="form-check"><input class="form-check-input" type="checkbox" id="editIsMainWindowVisible"><label class="form-check-label" for="editIsMainWindowVisible">显示主界面</label></div></div>
+                            <div class="col-md-3"><div class="form-check"><input class="form-check-input" type="checkbox" id="editShowDate"><label class="form-check-label" for="editShowDate">显示日期</label></div></div>
+                            <div class="col-md-3"><div class="form-check"><input class="form-check-input" type="checkbox" id="editHideOnClass"><label class="form-check-label" for="editHideOnClass">上课时隐藏</label></div></div>
+                            <div class="col-md-3"><div class="form-check"><input class="form-check-input" type="checkbox" id="editHideOnFullscreen"><label class="form-check-label" for="editHideOnFullscreen">全屏时隐藏</label></div></div>
+
+                            <div class="col-md-3"><div class="form-check"><input class="form-check-input" type="checkbox" id="editHideOnMaxWindow"><label class="form-check-label" for="editHideOnMaxWindow">窗口最大化时隐藏</label></div></div>
+                            <div class="col-md-3"><div class="form-check"><input class="form-check-input" type="checkbox" id="editIsClassPrepareNotificationEnabled"><label class="form-check-label" for="editIsClassPrepareNotificationEnabled">启用课前提醒</label></div></div>
+                            <div class="col-md-3"><div class="form-check"><input class="form-check-input" type="checkbox" id="editIsClassChangingNotificationEnabled"><label class="form-check-label" for="editIsClassChangingNotificationEnabled">启用上下课提醒</label></div></div>
+                            <div class="col-md-3"><div class="form-check"><input class="form-check-input" type="checkbox" id="editIsClassOffNotificationEnabled"><label class="form-check-label" for="editIsClassOffNotificationEnabled">启用下课提醒</label></div></div>
+
+                            <div class="col-md-3"><div class="form-check"><input class="form-check-input" type="checkbox" id="editIsCountdownEnabled"><label class="form-check-label" for="editIsCountdownEnabled">启用倒计时</label></div></div>
+                            <div class="col-md-3"><div class="form-check"><input class="form-check-input" type="checkbox" id="editIsSplashEnabled"><label class="form-check-label" for="editIsSplashEnabled">启用启动页</label></div></div>
+                            <div class="col-md-3"><div class="form-check"><input class="form-check-input" type="checkbox" id="editIsNotificationEnabled"><label class="form-check-label" for="editIsNotificationEnabled">启用通知</label></div></div>
+                            <div class="col-md-3"><div class="form-check"><input class="form-check-input" type="checkbox" id="editIsSpeechEnabled"><label class="form-check-label" for="editIsSpeechEnabled">启用语音</label></div></div>
+
+                            <div class="col-md-3"><div class="form-check"><input class="form-check-input" type="checkbox" id="editIsAutomationEnabled"><label class="form-check-label" for="editIsAutomationEnabled">启用自动化</label></div></div>
+                            <div class="col-md-3"><div class="form-check"><input class="form-check-input" type="checkbox" id="editIsAutomationWarningVisible"><label class="form-check-label" for="editIsAutomationWarningVisible">显示自动化警告</label></div></div>
+
+                            <div class="col-12 mt-2">
+                                <div class="accordion" id="editDefaultSettingsAdvancedAccordion">
+                                    <div class="accordion-item">
+                                        <h2 class="accordion-header" id="editAdvancedHeadingOne">
+                                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#editAdvancedCollapseOne" aria-expanded="false" aria-controls="editAdvancedCollapseOne">
+                                                高级字段（通知 / 语音 / 时间 / 更新）
+                                            </button>
+                                        </h2>
+                                        <div id="editAdvancedCollapseOne" class="accordion-collapse collapse" aria-labelledby="editAdvancedHeadingOne" data-bs-parent="#editDefaultSettingsAdvancedAccordion">
+                                            <div class="accordion-body">
+                                                <div class="row g-3">
+                                                    <div class="col-md-3"><div class="form-check"><input class="form-check-input" type="checkbox" id="editIsNotificationEffectEnabled"><label class="form-check-label" for="editIsNotificationEffectEnabled">通知动效</label></div></div>
+                                                    <div class="col-md-3"><div class="form-check"><input class="form-check-input" type="checkbox" id="editIsNotificationSoundEnabled"><label class="form-check-label" for="editIsNotificationSoundEnabled">通知声音</label></div></div>
+                                                    <div class="col-md-3"><div class="form-check"><input class="form-check-input" type="checkbox" id="editIsNotificationTopmostEnabled"><label class="form-check-label" for="editIsNotificationTopmostEnabled">通知置顶</label></div></div>
+                                                    <div class="col-md-3"><div class="form-check"><input class="form-check-input" type="checkbox" id="editIsExactTimeEnabled"><label class="form-check-label" for="editIsExactTimeEnabled">精确时间</label></div></div>
+
+                                                    <div class="col-md-3"><label class="form-label">语音来源</label><select class="form-select" id="editSpeechSource"><option value="0">系统</option><option value="1">备用</option><option value="2">自定义</option></select></div>
+                                                    <div class="col-md-3"><label class="form-label">语音音量</label><input type="number" class="form-control" id="editSpeechVolume" min="0" max="1" step="0.05"></div>
+                                                    <div class="col-md-3"><label class="form-label">通知音量</label><input type="number" class="form-control" id="editNotificationSoundVolume" min="0" max="1" step="0.05"></div>
+                                                    <div class="col-md-3"><label class="form-label">更新时间策略</label><select class="form-select" id="editUpdateMode"><option value="0">关闭</option><option value="1">手动</option><option value="2">提醒</option><option value="3">自动</option></select></div>
+
+                                                    <div class="col-md-4"><label class="form-label">时间服务器</label><input type="text" class="form-control" id="editExactTimeServer"></div>
+                                                    <div class="col-md-4"><label class="form-label">时间偏移（秒）</label><input type="number" class="form-control" id="editTimeOffsetSeconds" step="0.1"></div>
+                                                    <div class="col-md-4"><label class="form-label">自动校时偏移（秒）</label><input type="number" class="form-control" id="editTimeAutoAdjustSeconds" step="0.1"></div>
+
+                                                    <div class="col-md-3"><div class="form-check"><input class="form-check-input" type="checkbox" id="editIsTimeAutoAdjustEnabled"><label class="form-check-label" for="editIsTimeAutoAdjustEnabled">启用自动校时</label></div></div>
+                                                    <div class="col-md-3"><div class="form-check"><input class="form-check-input" type="checkbox" id="editIsWallpaperAutoUpdateEnabled"><label class="form-check-label" for="editIsWallpaperAutoUpdateEnabled">自动更新壁纸色</label></div></div>
+                                                    <div class="col-md-3"><div class="form-check"><input class="form-check-input" type="checkbox" id="editIsFallbackModeEnabled"><label class="form-check-label" for="editIsFallbackModeEnabled">降级模式</label></div></div>
+                                                    <div class="col-md-3"><label class="form-label">壁纸更新间隔（秒）</label><input type="number" class="form-control" id="editWallpaperAutoUpdateIntervalSeconds" min="0" step="1"></div>
+
+                                                    <div class="col-md-4"><label class="form-label">城市 ID</label><input type="text" class="form-control" id="editCityId"></div>
+                                                    <div class="col-md-4"><label class="form-label">城市名称</label><input type="text" class="form-control" id="editCityName"></div>
+                                                    <div class="col-md-4"><label class="form-label">更新通道 V2</label><input type="text" class="form-control" id="editSelectedUpdateChannelV2"></div>
+
+                                                    <div class="col-md-6"><label class="form-label">组件配置方案</label><input type="text" class="form-control" id="editCurrentComponentConfig"></div>
+                                                    <div class="col-md-6"><label class="form-label">自动化配置方案</label><input type="text" class="form-control" id="editCurrentAutomationConfig"></div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                         {% elif active_tab == 'components' or active_tab == 'class_plans' or active_tab == 'time_layouts' or active_tab == 'subjects' %}
                         <div class="mb-2">
                             <div class="input-group">
@@ -372,6 +544,106 @@ const CREDENTIAL_LEVEL_KEYS = [
     'ExitApplicationAuthorizeLevel',
     'ChangeLessonsAuthorizeLevel',
 ];
+const DEFAULT_SETTINGS_FIELDS = {
+    booleans: [
+        'IsMainWindowVisible',
+        'ShowDate',
+        'HideOnClass',
+        'HideOnFullscreen',
+        'HideOnMaxWindow',
+        'IsClassPrepareNotificationEnabled',
+        'IsClassChangingNotificationEnabled',
+        'IsClassOffNotificationEnabled',
+        'IsCountdownEnabled',
+        'IsSplashEnabled',
+        'IsNotificationEnabled',
+        'IsSpeechEnabled',
+        'IsAutomationEnabled',
+        'IsAutomationWarningVisible',
+        'IsNotificationEffectEnabled',
+        'IsNotificationSoundEnabled',
+        'IsNotificationTopmostEnabled',
+        'IsExactTimeEnabled',
+        'IsTimeAutoAdjustEnabled',
+        'IsWallpaperAutoUpdateEnabled',
+        'IsFallbackModeEnabled',
+    ],
+    integers: [
+        'Theme',
+        'TaskBarIconClickBehavior',
+        'WindowDockingLocation',
+        'WindowLayer',
+        'ClassPrepareNotifySeconds',
+        'CountdownSeconds',
+        'SpeechSource',
+        'UpdateMode',
+        'WallpaperAutoUpdateIntervalSeconds',
+    ],
+    numbers: [
+        'Opacity',
+        'Scale',
+        'ScheduleSpacing',
+        'SpeechVolume',
+        'NotificationSoundVolume',
+        'TimeOffsetSeconds',
+        'TimeAutoAdjustSeconds',
+    ],
+    strings: [
+        'SplashCustomText',
+        'ExactTimeServer',
+        'CityId',
+        'CityName',
+        'CurrentComponentConfig',
+        'CurrentAutomationConfig',
+        'SelectedUpdateChannelV2',
+    ],
+};
+const DEFAULT_SETTINGS_DEFAULTS = {
+    Theme: 2,
+    TaskBarIconClickBehavior: 0,
+    WindowDockingLocation: 1,
+    WindowLayer: 1,
+    Opacity: 0.5,
+    Scale: 1.0,
+    ClassPrepareNotifySeconds: 60,
+    CountdownSeconds: 60,
+    ScheduleSpacing: 1,
+    SplashCustomText: '',
+    IsMainWindowVisible: true,
+    ShowDate: true,
+    HideOnClass: false,
+    HideOnFullscreen: false,
+    HideOnMaxWindow: false,
+    IsClassPrepareNotificationEnabled: true,
+    IsClassChangingNotificationEnabled: true,
+    IsClassOffNotificationEnabled: true,
+    IsCountdownEnabled: true,
+    IsSplashEnabled: true,
+    IsNotificationEnabled: true,
+    IsSpeechEnabled: true,
+    IsAutomationEnabled: false,
+    IsAutomationWarningVisible: true,
+    IsNotificationEffectEnabled: true,
+    IsNotificationSoundEnabled: true,
+    IsNotificationTopmostEnabled: true,
+    IsExactTimeEnabled: true,
+    IsTimeAutoAdjustEnabled: false,
+    IsWallpaperAutoUpdateEnabled: false,
+    IsFallbackModeEnabled: true,
+    SpeechSource: 0,
+    UpdateMode: 3,
+    WallpaperAutoUpdateIntervalSeconds: 60,
+    SpeechVolume: 1,
+    NotificationSoundVolume: 1,
+    TimeOffsetSeconds: 0,
+    TimeAutoAdjustSeconds: 0,
+    ExactTimeServer: 'ntp.aliyun.com',
+    CityId: 'weathercn:101010100',
+    CityName: '北京 (北京, 中国)',
+    CurrentComponentConfig: 'Default',
+    CurrentAutomationConfig: 'Default',
+    SelectedUpdateChannelV2: 'stable',
+};
 
 function collectPolicyData(prefix) {
     const data = {};
@@ -415,6 +687,76 @@ function fillCredentialData(prefix, data) {
     });
 }
 
+function collectDefaultSettingsData(prefix) {
+    const data = {};
+    DEFAULT_SETTINGS_FIELDS.booleans.forEach(key => {
+        data[key] = !!document.getElementById(`${prefix}${key}`)?.checked;
+    });
+    DEFAULT_SETTINGS_FIELDS.integers.forEach(key => {
+        const raw = document.getElementById(`${prefix}${key}`)?.value;
+        const v = Number.parseInt(raw ?? '', 10);
+        data[key] = Number.isInteger(v) ? v : DEFAULT_SETTINGS_DEFAULTS[key];
+    });
+    DEFAULT_SETTINGS_FIELDS.numbers.forEach(key => {
+        const raw = document.getElementById(`${prefix}${key}`)?.value;
+        const v = Number.parseFloat(raw ?? '');
+        data[key] = Number.isFinite(v) ? v : DEFAULT_SETTINGS_DEFAULTS[key];
+    });
+    DEFAULT_SETTINGS_FIELDS.strings.forEach(key => {
+        data[key] = String(document.getElementById(`${prefix}${key}`)?.value ?? '');
+    });
+    return data;
+}
+
+function fillDefaultSettingsData(prefix, data) {
+    const source = data && typeof data === 'object' && !Array.isArray(data) ? data : {};
+    DEFAULT_SETTINGS_FIELDS.booleans.forEach(key => {
+        const el = document.getElementById(`${prefix}${key}`);
+        if (!el) return;
+        const value = source[key];
+        el.checked = typeof value === 'boolean' ? value : !!DEFAULT_SETTINGS_DEFAULTS[key];
+    });
+    DEFAULT_SETTINGS_FIELDS.integers.forEach(key => {
+        const el = document.getElementById(`${prefix}${key}`);
+        if (!el) return;
+        const v = Number.parseInt(String(source[key]), 10);
+        el.value = String(Number.isInteger(v) ? v : DEFAULT_SETTINGS_DEFAULTS[key]);
+    });
+    DEFAULT_SETTINGS_FIELDS.numbers.forEach(key => {
+        const el = document.getElementById(`${prefix}${key}`);
+        if (!el) return;
+        const v = Number.parseFloat(String(source[key]));
+        el.value = String(Number.isFinite(v) ? v : DEFAULT_SETTINGS_DEFAULTS[key]);
+    });
+    DEFAULT_SETTINGS_FIELDS.strings.forEach(key => {
+        const el = document.getElementById(`${prefix}${key}`);
+        if (!el) return;
+        const v = source[key];
+        el.value = typeof v === 'string' ? v : DEFAULT_SETTINGS_DEFAULTS[key];
+    });
+}
+
+function sanitizeDefaultSettingsImportData(source) {
+    const sanitized = {};
+    DEFAULT_SETTINGS_FIELDS.booleans.forEach(key => {
+        const value = source[key];
+        sanitized[key] = typeof value === 'boolean' ? value : DEFAULT_SETTINGS_DEFAULTS[key];
+    });
+    DEFAULT_SETTINGS_FIELDS.integers.forEach(key => {
+        const v = Number.parseInt(String(source[key]), 10);
+        sanitized[key] = Number.isInteger(v) ? v : DEFAULT_SETTINGS_DEFAULTS[key];
+    });
+    DEFAULT_SETTINGS_FIELDS.numbers.forEach(key => {
+        const v = Number.parseFloat(String(source[key]));
+        sanitized[key] = Number.isFinite(v) ? v : DEFAULT_SETTINGS_DEFAULTS[key];
+    });
+    DEFAULT_SETTINGS_FIELDS.strings.forEach(key => {
+        const v = source[key];
+        sanitized[key] = typeof v === 'string' ? v : DEFAULT_SETTINGS_DEFAULTS[key];
+    });
+    return sanitized;
+}
+
 function toPlainObject(value) {
     return value && typeof value === 'object' && !Array.isArray(value) ? value : {};
 }
@@ -449,15 +791,20 @@ function sanitizeImportedData(parsed) {
     if (CONFIG_TYPE === 'class_plans' || CONFIG_TYPE === 'time_layouts' || CONFIG_TYPE === 'subjects') {
         return sanitizeScheduleImportData(parsed, CONFIG_TYPE);
     }
+    if (CONFIG_TYPE === 'default_settings') {
+        return sanitizeDefaultSettingsImportData(parsed);
+    }
     return parsed;
 }
 
 function importConfigJson(prefix) {
-    const fileInputId = prefix === 'add' ? 'addImportJsonFile' : 'editImportJsonFile';
+    const fileInputId = CONFIG_TYPE === 'default_settings'
+        ? (prefix === 'add' ? 'addDefaultSettingsJsonFile' : 'editDefaultSettingsJsonFile')
+        : (prefix === 'add' ? 'addImportJsonFile' : 'editImportJsonFile');
     const textareaId = prefix === 'add' ? 'addDataJson' : 'editDataJson';
     const input = document.getElementById(fileInputId);
     const textarea = document.getElementById(textareaId);
-    if (!input || !textarea) return;
+    if (!input) return;
     const file = input.files?.[0];
     if (!file) {
         alert('请先选择 JSON 文件');
@@ -469,13 +816,25 @@ function importConfigJson(prefix) {
             const text = String(reader.result || '');
             const parsed = JSON.parse(text);
             const sanitized = sanitizeImportedData(parsed);
-            textarea.value = JSON.stringify(sanitized, null, 2);
+            if (CONFIG_TYPE === 'default_settings') {
+                fillDefaultSettingsData(prefix, sanitized);
+            } else {
+                if (!textarea) return;
+                textarea.value = JSON.stringify(sanitized, null, 2);
+            }
         } catch (e) {
             alert(e?.message || '导入失败：文件不是有效的 JSON');
         }
     };
     reader.onerror = () => alert('读取文件失败');
     reader.readAsText(file, 'utf-8');
+}
+
+function initDefaultSettingsAddForm() {
+    if (CONFIG_TYPE !== 'default_settings') return;
+    fillDefaultSettingsData('add', DEFAULT_SETTINGS_DEFAULTS);
+    const fileInput = document.getElementById('addDefaultSettingsJsonFile');
+    if (fileInput) fileInput.value = '';
 }
 
 async function loadConfigs() {
@@ -508,6 +867,8 @@ document.getElementById('addConfigForm').addEventListener('submit', async functi
         body.data_json = collectPolicyData('add');
     } else if (CONFIG_TYPE === 'credential') {
         body.data_json = collectCredentialData('add');
+    } else if (CONFIG_TYPE === 'default_settings') {
+        body.data_json = collectDefaultSettingsData('add');
     } else {
         const rawJson = fd.get('data_json');
         if (rawJson && rawJson.trim()) {
@@ -525,6 +886,7 @@ document.getElementById('addConfigForm').addEventListener('submit', async functi
     if (resp.ok) {
         bootstrap.Modal.getInstance(document.getElementById('addConfigModal')).hide();
         this.reset();
+        initDefaultSettingsAddForm();
         loadConfigs();
     } else {
         const err = await resp.json();
@@ -542,6 +904,8 @@ async function editConfig(id) {
         fillPolicyData('edit', item.data_json || {});
     } else if (CONFIG_TYPE === 'credential') {
         fillCredentialData('edit', item.data_json || {});
+    } else if (CONFIG_TYPE === 'default_settings') {
+        fillDefaultSettingsData('edit', item.data_json || {});
     } else {
         document.getElementById('editDataJson').value = JSON.stringify(item.data_json, null, 2);
     }
@@ -562,6 +926,8 @@ document.getElementById('editConfigForm').addEventListener('submit', async funct
         body.data_json = collectPolicyData('edit');
     } else if (CONFIG_TYPE === 'credential') {
         body.data_json = collectCredentialData('edit');
+    } else if (CONFIG_TYPE === 'default_settings') {
+        body.data_json = collectDefaultSettingsData('edit');
     } else {
         const rawJson = fd.get('data_json');
         if (rawJson && rawJson.trim()) {
@@ -598,6 +964,14 @@ async function deleteConfig() {
     } else {
         alert('删除失败');
     }
+}
+
+document.getElementById('addConfigModal').addEventListener('show.bs.modal', function() {
+    initDefaultSettingsAddForm();
+});
+
+if (CONFIG_TYPE === 'default_settings') {
+    initDefaultSettingsAddForm();
 }
 
 loadConfigs();
