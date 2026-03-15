@@ -93,7 +93,7 @@ REST_FRAMEWORK = {
 }
 
 # gRPC Server
-GRPC_SERVER_PORT = int(os.environ.get('GRPC_PORT', '50051'))
+GRPC_SERVER_PORT = int(os.environ.get('GRPC_PORT', '20722'))
 
 # ClassIsland Management Protocol
 CLASSISLAND_PROTOCOL_NAME = 'Cyrene_MSP'

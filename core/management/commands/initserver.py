@@ -44,6 +44,6 @@ class Command(BaseCommand):
             self.stdout.write(f"管理员 {admin_user} 已存在")
 
         self.stdout.write(self.style.SUCCESS("\n初始化完成！"))
-        self.stdout.write(f"  HTTP: python manage.py runserver 0.0.0.0:8000")
-        self.stdout.write(f"  gRPC: python manage.py grpcserver --port 50051")
-        self.stdout.write(f"  管理面板: http://localhost:8000/")
+        self.stdout.write(f"  HTTP: python manage.py runserver 0.0.0.0:20721")
+        self.stdout.write(f"  gRPC: python manage.py grpcserver --port 20722")
+        self.stdout.write(f"  管理面板: http://localhost:20721/")

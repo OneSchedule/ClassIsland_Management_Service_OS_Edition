@@ -86,14 +86,14 @@ uv run python manage.py initserver
 ### 5. 启动服务
 
 ```bash
-# 启动 Django HTTP 服务（默认 8000 端口）
-uv run python manage.py runserver 0.0.0.0:8000
+# 启动 Django HTTP 服务（默认 20721 端口）
+uv run python manage.py runserver 0.0.0.0:20721
 
-# 在另一个终端启动 gRPC 服务（默认 50051 端口）
+# 在另一个终端启动 gRPC 服务（默认 20722 端口）
 uv run python manage.py grpcserver
 ```
 
-启动后访问 http://localhost:8000/ 进入管理面板。
+启动后访问 http://localhost:20721/ 进入管理面板。
 
 ## 📂 项目结构
 
@@ -129,7 +129,7 @@ uv run python manage.py grpcserver
 
 | 配置项 | 默认值 | 说明 |
 |--------|--------|------|
-| `GRPC_SERVER_PORT` | `50051` | gRPC 服务监听端口 |
+| `GRPC_SERVER_PORT` | `20722` | gRPC 服务监听端口 |
 | `SECRET_KEY` | 随机生成 | Django 密钥，生产环境务必更换 |
 | `DEBUG` | `True` | 生产环境请设为 `False` |
 | `DATABASES` | SQLite | 生产环境建议换用 PostgreSQL |
@@ -145,8 +145,8 @@ uv run python manage.py grpcserver
 
 在 ClassIsland 客户端中配置集控服务器地址：
 
-- **服务端地址**: `http://<server-ip>:8000`
-- **gRPC 地址**: `<server-ip>:50051`
+- **服务端地址**: `http://<server-ip>:20721`
+- **gRPC 地址**: `<server-ip>:20722`
 
 客户端将自动通过 HTTP 获取 Manifest 和资源，通过 gRPC 完成注册、握手和命令接收。
 

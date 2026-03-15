@@ -33,7 +33,7 @@ class Command(BaseCommand):
         parser.add_argument(
             "--port", type=int,
             default=settings.GRPC_SERVER_PORT,
-            help="gRPC 监听端口 (默认 50051)",
+            help="gRPC 监听端口 (默认 20722)",
         )
         parser.add_argument(
             "--max-workers", type=int, default=10,

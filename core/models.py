@@ -18,12 +18,12 @@ class Organization(models.Model):
     management_server = models.CharField(
         "HTTP 地址",
         max_length=255,
-        default="http://127.0.0.1:8000",
+        default="http://127.0.0.1:20721",
     )
     management_server_grpc = models.CharField(
         "gRPC 地址",
         max_length=255,
-        default="http://127.0.0.1:50051",
+        default="http://127.0.0.1:20722",
     )
     created_at = models.DateTimeField(auto_now_add=True)
 
