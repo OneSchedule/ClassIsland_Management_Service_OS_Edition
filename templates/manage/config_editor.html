@@ -79,7 +79,95 @@
                     {% endif %}
                     <div class="mb-3">
                         <label class="form-label">配置数据 (JSON)</label>
+                        {% if active_tab == 'policy' %}
+                        <div class="row g-2 mt-1" id="addPolicyFields">
+                            <div class="col-md-6"><div class="form-check"><input class="form-check-input" type="checkbox" id="addDisableProfileClassPlanEditing" name="DisableProfileClassPlanEditing"><label class="form-check-label" for="addDisableProfileClassPlanEditing">禁用档案课表编辑</label></div></div>
+                            <div class="col-md-6"><div class="form-check"><input class="form-check-input" type="checkbox" id="addDisableProfileTimeLayoutEditing" name="DisableProfileTimeLayoutEditing"><label class="form-check-label" for="addDisableProfileTimeLayoutEditing">禁用档案时间表编辑</label></div></div>
+                            <div class="col-md-6"><div class="form-check"><input class="form-check-input" type="checkbox" id="addDisableProfileSubjectsEditing" name="DisableProfileSubjectsEditing"><label class="form-check-label" for="addDisableProfileSubjectsEditing">禁用档案科目编辑</label></div></div>
+                            <div class="col-md-6"><div class="form-check"><input class="form-check-input" type="checkbox" id="addDisableProfileEditing" name="DisableProfileEditing"><label class="form-check-label" for="addDisableProfileEditing">禁用档案编辑</label></div></div>
+                            <div class="col-md-6"><div class="form-check"><input class="form-check-input" type="checkbox" id="addDisableSettingsEditing" name="DisableSettingsEditing"><label class="form-check-label" for="addDisableSettingsEditing">禁用设置编辑</label></div></div>
+                            <div class="col-md-6"><div class="form-check"><input class="form-check-input" type="checkbox" id="addDisableSplashCustomize" name="DisableSplashCustomize"><label class="form-check-label" for="addDisableSplashCustomize">禁用启动页自定义</label></div></div>
+                            <div class="col-md-6"><div class="form-check"><input class="form-check-input" type="checkbox" id="addDisableDebugMenu" name="DisableDebugMenu"><label class="form-check-label" for="addDisableDebugMenu">禁用调试菜单</label></div></div>
+                            <div class="col-md-6"><div class="form-check"><input class="form-check-input" type="checkbox" id="addAllowExitManagement" name="AllowExitManagement" checked><label class="form-check-label" for="addAllowExitManagement">允许退出集控</label></div></div>
+                            <div class="col-md-6"><div class="form-check"><input class="form-check-input" type="checkbox" id="addDisableEasterEggs" name="DisableEasterEggs"><label class="form-check-label" for="addDisableEasterEggs">禁用彩蛋</label></div></div>
+                            <div class="col-md-6"><div class="form-check"><input class="form-check-input" type="checkbox" id="addIsActive" name="IsActive"><label class="form-check-label" for="addIsActive">启用该策略</label></div></div>
+                        </div>
+                        {% elif active_tab == 'credential' %}
+                        <div class="row g-3 mt-1" id="addCredentialFields">
+                            <div class="col-md-6">
+                                <label class="form-label">用户凭据字符串</label>
+                                <input type="text" class="form-control font-monospace" id="addUserCredential" name="UserCredential" placeholder="留空表示不要求用户凭据">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">管理员凭据字符串</label>
+                                <input type="text" class="form-control font-monospace" id="addAdminCredential" name="AdminCredential" placeholder="留空表示不要求管理员凭据">
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label">编辑授权设置</label>
+                                <select class="form-select" id="addEditAuthorizeSettingsAuthorizeLevel" name="EditAuthorizeSettingsAuthorizeLevel">
+                                    <option value="0">无</option>
+                                    <option value="1">用户</option>
+                                    <option value="2">管理员</option>
+                                </select>
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label">编辑策略</label>
+                                <select class="form-select" id="addEditPolicyAuthorizeLevel" name="EditPolicyAuthorizeLevel">
+                                    <option value="0">无</option>
+                                    <option value="1">用户</option>
+                                    <option value="2">管理员</option>
+                                </select>
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label">退出集控</label>
+                                <select class="form-select" id="addExitManagementAuthorizeLevel" name="ExitManagementAuthorizeLevel">
+                                    <option value="0">无</option>
+                                    <option value="1">用户</option>
+                                    <option value="2">管理员</option>
+                                </select>
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label">编辑档案</label>
+                                <select class="form-select" id="addEditProfileAuthorizeLevel" name="EditProfileAuthorizeLevel">
+                                    <option value="0">无</option>
+                                    <option value="1">用户</option>
+                                    <option value="2">管理员</option>
+                                </select>
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label">编辑应用设置</label>
+                                <select class="form-select" id="addEditSettingsAuthorizeLevel" name="EditSettingsAuthorizeLevel">
+                                    <option value="0">无</option>
+                                    <option value="1">用户</option>
+                                    <option value="2">管理员</option>
+                                </select>
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label">退出应用</label>
+                                <select class="form-select" id="addExitApplicationAuthorizeLevel" name="ExitApplicationAuthorizeLevel">
+                                    <option value="0">无</option>
+                                    <option value="1">用户</option>
+                                    <option value="2">管理员</option>
+                                </select>
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label">换课</label>
+                                <select class="form-select" id="addChangeLessonsAuthorizeLevel" name="ChangeLessonsAuthorizeLevel">
+                                    <option value="0">无</option>
+                                    <option value="1">用户</option>
+                                    <option value="2">管理员</option>
+                                </select>
+                            </div>
+                            <div class="col-md-4 d-flex align-items-end">
+                                <div class="form-check mb-2">
+                                    <input class="form-check-input" type="checkbox" id="addCredentialIsActive" name="IsActive">
+                                    <label class="form-check-label" for="addCredentialIsActive">启用该凭据配置</label>
+                                </div>
+                            </div>
+                        </div>
+                        {% else %}
                         <textarea name="data_json" class="form-control font-monospace" rows="8" placeholder="{}"></textarea>
+                        {% endif %}
                     </div>
                 </div>
                 <div class="modal-footer">
@@ -124,7 +212,95 @@
                     {% endif %}
                     <div class="mb-3">
                         <label class="form-label">配置数据 (JSON)</label>
+                        {% if active_tab == 'policy' %}
+                        <div class="row g-2 mt-1" id="editPolicyFields">
+                            <div class="col-md-6"><div class="form-check"><input class="form-check-input" type="checkbox" id="editDisableProfileClassPlanEditing" name="DisableProfileClassPlanEditing"><label class="form-check-label" for="editDisableProfileClassPlanEditing">禁用档案课表编辑</label></div></div>
+                            <div class="col-md-6"><div class="form-check"><input class="form-check-input" type="checkbox" id="editDisableProfileTimeLayoutEditing" name="DisableProfileTimeLayoutEditing"><label class="form-check-label" for="editDisableProfileTimeLayoutEditing">禁用档案时间表编辑</label></div></div>
+                            <div class="col-md-6"><div class="form-check"><input class="form-check-input" type="checkbox" id="editDisableProfileSubjectsEditing" name="DisableProfileSubjectsEditing"><label class="form-check-label" for="editDisableProfileSubjectsEditing">禁用档案科目编辑</label></div></div>
+                            <div class="col-md-6"><div class="form-check"><input class="form-check-input" type="checkbox" id="editDisableProfileEditing" name="DisableProfileEditing"><label class="form-check-label" for="editDisableProfileEditing">禁用档案编辑</label></div></div>
+                            <div class="col-md-6"><div class="form-check"><input class="form-check-input" type="checkbox" id="editDisableSettingsEditing" name="DisableSettingsEditing"><label class="form-check-label" for="editDisableSettingsEditing">禁用设置编辑</label></div></div>
+                            <div class="col-md-6"><div class="form-check"><input class="form-check-input" type="checkbox" id="editDisableSplashCustomize" name="DisableSplashCustomize"><label class="form-check-label" for="editDisableSplashCustomize">禁用启动页自定义</label></div></div>
+                            <div class="col-md-6"><div class="form-check"><input class="form-check-input" type="checkbox" id="editDisableDebugMenu" name="DisableDebugMenu"><label class="form-check-label" for="editDisableDebugMenu">禁用调试菜单</label></div></div>
+                            <div class="col-md-6"><div class="form-check"><input class="form-check-input" type="checkbox" id="editAllowExitManagement" name="AllowExitManagement"><label class="form-check-label" for="editAllowExitManagement">允许退出集控</label></div></div>
+                            <div class="col-md-6"><div class="form-check"><input class="form-check-input" type="checkbox" id="editDisableEasterEggs" name="DisableEasterEggs"><label class="form-check-label" for="editDisableEasterEggs">禁用彩蛋</label></div></div>
+                            <div class="col-md-6"><div class="form-check"><input class="form-check-input" type="checkbox" id="editIsActive" name="IsActive"><label class="form-check-label" for="editIsActive">启用该策略</label></div></div>
+                        </div>
+                        {% elif active_tab == 'credential' %}
+                        <div class="row g-3 mt-1" id="editCredentialFields">
+                            <div class="col-md-6">
+                                <label class="form-label">用户凭据字符串</label>
+                                <input type="text" class="form-control font-monospace" id="editUserCredential" name="UserCredential" placeholder="留空表示不要求用户凭据">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">管理员凭据字符串</label>
+                                <input type="text" class="form-control font-monospace" id="editAdminCredential" name="AdminCredential" placeholder="留空表示不要求管理员凭据">
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label">编辑授权设置</label>
+                                <select class="form-select" id="editEditAuthorizeSettingsAuthorizeLevel" name="EditAuthorizeSettingsAuthorizeLevel">
+                                    <option value="0">无</option>
+                                    <option value="1">用户</option>
+                                    <option value="2">管理员</option>
+                                </select>
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label">编辑策略</label>
+                                <select class="form-select" id="editEditPolicyAuthorizeLevel" name="EditPolicyAuthorizeLevel">
+                                    <option value="0">无</option>
+                                    <option value="1">用户</option>
+                                    <option value="2">管理员</option>
+                                </select>
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label">退出集控</label>
+                                <select class="form-select" id="editExitManagementAuthorizeLevel" name="ExitManagementAuthorizeLevel">
+                                    <option value="0">无</option>
+                                    <option value="1">用户</option>
+                                    <option value="2">管理员</option>
+                                </select>
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label">编辑档案</label>
+                                <select class="form-select" id="editEditProfileAuthorizeLevel" name="EditProfileAuthorizeLevel">
+                                    <option value="0">无</option>
+                                    <option value="1">用户</option>
+                                    <option value="2">管理员</option>
+                                </select>
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label">编辑应用设置</label>
+                                <select class="form-select" id="editEditSettingsAuthorizeLevel" name="EditSettingsAuthorizeLevel">
+                                    <option value="0">无</option>
+                                    <option value="1">用户</option>
+                                    <option value="2">管理员</option>
+                                </select>
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label">退出应用</label>
+                                <select class="form-select" id="editExitApplicationAuthorizeLevel" name="ExitApplicationAuthorizeLevel">
+                                    <option value="0">无</option>
+                                    <option value="1">用户</option>
+                                    <option value="2">管理员</option>
+                                </select>
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label">换课</label>
+                                <select class="form-select" id="editChangeLessonsAuthorizeLevel" name="ChangeLessonsAuthorizeLevel">
+                                    <option value="0">无</option>
+                                    <option value="1">用户</option>
+                                    <option value="2">管理员</option>
+                                </select>
+                            </div>
+                            <div class="col-md-4 d-flex align-items-end">
+                                <div class="form-check mb-2">
+                                    <input class="form-check-input" type="checkbox" id="editCredentialIsActive" name="IsActive">
+                                    <label class="form-check-label" for="editCredentialIsActive">启用该凭据配置</label>
+                                </div>
+                            </div>
+                        </div>
+                        {% else %}
                         <textarea name="data_json" id="editDataJson" class="form-control font-monospace" rows="12"></textarea>
+                        {% endif %}
                     </div>
                 </div>
                 <div class="modal-footer">
@@ -145,6 +321,69 @@
 const CONFIG_TYPE = '{{ active_tab }}';
 const API_BASE = `/manage/api/configs/${CONFIG_TYPE}/`;
 const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+const POLICY_KEYS = [
+    'DisableProfileClassPlanEditing',
+    'DisableProfileTimeLayoutEditing',
+    'DisableProfileSubjectsEditing',
+    'DisableProfileEditing',
+    'DisableSettingsEditing',
+    'DisableSplashCustomize',
+    'DisableDebugMenu',
+    'AllowExitManagement',
+    'DisableEasterEggs',
+    'IsActive',
+];
+const CREDENTIAL_LEVEL_KEYS = [
+    'EditAuthorizeSettingsAuthorizeLevel',
+    'EditPolicyAuthorizeLevel',
+    'ExitManagementAuthorizeLevel',
+    'EditProfileAuthorizeLevel',
+    'EditSettingsAuthorizeLevel',
+    'ExitApplicationAuthorizeLevel',
+    'ChangeLessonsAuthorizeLevel',
+];
+
+function collectPolicyData(prefix) {
+    const data = {};
+    POLICY_KEYS.forEach(key => {
+        const el = document.getElementById(`${prefix}${key}`);
+        data[key] = !!(el && el.checked);
+    });
+    return data;
+}
+
+function fillPolicyData(prefix, data) {
+    POLICY_KEYS.forEach(key => {
+        const el = document.getElementById(`${prefix}${key}`);
+        if (!el) return;
+        el.checked = !!data?.[key];
+    });
+}
+
+function collectCredentialData(prefix) {
+    const data = {
+        UserCredential: document.getElementById(`${prefix}UserCredential`)?.value || '',
+        AdminCredential: document.getElementById(`${prefix}AdminCredential`)?.value || '',
+        IsActive: !!document.getElementById(`${prefix}CredentialIsActive`)?.checked,
+    };
+    CREDENTIAL_LEVEL_KEYS.forEach(key => {
+        const el = document.getElementById(`${prefix}${key}`);
+        data[key] = Number(el?.value ?? 0);
+    });
+    return data;
+}
+
+function fillCredentialData(prefix, data) {
+    document.getElementById(`${prefix}UserCredential`).value = data?.UserCredential || '';
+    document.getElementById(`${prefix}AdminCredential`).value = data?.AdminCredential || '';
+    document.getElementById(`${prefix}CredentialIsActive`).checked = !!data?.IsActive;
+    CREDENTIAL_LEVEL_KEYS.forEach(key => {
+        const el = document.getElementById(`${prefix}${key}`);
+        if (!el) return;
+        const v = Number(data?.[key]);
+        el.value = Number.isInteger(v) && v >= 0 && v <= 2 ? String(v) : '0';
+    });
+}
 
 async function loadConfigs() {
     const resp = await fetch(API_BASE);
@@ -172,9 +411,15 @@ document.getElementById('addConfigForm').addEventListener('submit', async functi
         name: fd.get('name'),
         identifier: fd.get('identifier'),
     };
-    const rawJson = fd.get('data_json');
-    if (rawJson && rawJson.trim()) {
-        try { body.data_json = JSON.parse(rawJson); } catch(e) { alert('JSON 格式错误'); return; }
+    if (CONFIG_TYPE === 'policy') {
+        body.data_json = collectPolicyData('add');
+    } else if (CONFIG_TYPE === 'credential') {
+        body.data_json = collectCredentialData('add');
+    } else {
+        const rawJson = fd.get('data_json');
+        if (rawJson && rawJson.trim()) {
+            try { body.data_json = JSON.parse(rawJson); } catch(e) { alert('JSON 格式错误'); return; }
+        }
     }
     if (CONFIG_TYPE === 'class_plans') {
         body.time_layout_id = fd.get('time_layout_id');
@@ -200,7 +445,13 @@ async function editConfig(id) {
     document.getElementById('editId').value = id;
     document.getElementById('editName').value = item.name;
     document.getElementById('editIdentifier').value = item.identifier;
-    document.getElementById('editDataJson').value = JSON.stringify(item.data_json, null, 2);
+    if (CONFIG_TYPE === 'policy') {
+        fillPolicyData('edit', item.data_json || {});
+    } else if (CONFIG_TYPE === 'credential') {
+        fillCredentialData('edit', item.data_json || {});
+    } else {
+        document.getElementById('editDataJson').value = JSON.stringify(item.data_json, null, 2);
+    }
     const tlSelect = document.getElementById('editTimeLayout');
     if (tlSelect) tlSelect.value = item.time_layout_id || '';
     new bootstrap.Modal(document.getElementById('editConfigModal')).show();
@@ -214,9 +465,15 @@ document.getElementById('editConfigForm').addEventListener('submit', async funct
         name: fd.get('name'),
         identifier: fd.get('identifier'),
     };
-    const rawJson = fd.get('data_json');
-    if (rawJson && rawJson.trim()) {
-        try { body.data_json = JSON.parse(rawJson); } catch(e) { alert('JSON 格式错误'); return; }
+    if (CONFIG_TYPE === 'policy') {
+        body.data_json = collectPolicyData('edit');
+    } else if (CONFIG_TYPE === 'credential') {
+        body.data_json = collectCredentialData('edit');
+    } else {
+        const rawJson = fd.get('data_json');
+        if (rawJson && rawJson.trim()) {
+            try { body.data_json = JSON.parse(rawJson); } catch(e) { alert('JSON 格式错误'); return; }
+        }
     }
     if (CONFIG_TYPE === 'class_plans') {
         body.time_layout_id = fd.get('time_layout_id');

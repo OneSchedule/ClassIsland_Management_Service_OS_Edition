@@ -414,6 +414,53 @@ _CONFIG_MODEL_MAP = {
 }
 
 
+_POLICY_BOOL_KEYS = [
+    "DisableProfileClassPlanEditing",
+    "DisableProfileTimeLayoutEditing",
+    "DisableProfileSubjectsEditing",
+    "DisableProfileEditing",
+    "DisableSettingsEditing",
+    "DisableSplashCustomize",
+    "DisableDebugMenu",
+    "AllowExitManagement",
+    "DisableEasterEggs",
+    "IsActive",
+]
+
+
+_CREDENTIAL_LEVEL_KEYS = [
+    "EditAuthorizeSettingsAuthorizeLevel",
+    "EditPolicyAuthorizeLevel",
+    "ExitManagementAuthorizeLevel",
+    "EditProfileAuthorizeLevel",
+    "EditSettingsAuthorizeLevel",
+    "ExitApplicationAuthorizeLevel",
+    "ChangeLessonsAuthorizeLevel",
+]
+
+
+def _normalize_policy_data(raw_data):
+    data = raw_data if isinstance(raw_data, dict) else {}
+    normalized = {}
+    for key in _POLICY_BOOL_KEYS:
+        default = True if key == "AllowExitManagement" else False
+        normalized[key] = _to_bool(data.get(key), default)
+    return normalized
+
+
+def _normalize_credential_data(raw_data):
+    data = raw_data if isinstance(raw_data, dict) else {}
+    normalized = {
+        "UserCredential": str(data.get("UserCredential") or ""),
+        "AdminCredential": str(data.get("AdminCredential") or ""),
+        "IsActive": _to_bool(data.get("IsActive"), False),
+    }
+    for key in _CREDENTIAL_LEVEL_KEYS:
+        level = _to_int(data.get(key), 0)
+        normalized[key] = min(max(level, 0), 2)
+    return normalized
+
+
 class ConfigListAPI(APIView):
     """GET / POST  /manage/api/configs/<config_type>/"""
 
@@ -435,6 +482,10 @@ class ConfigListAPI(APIView):
             if config_type == "class_plans":
                 d["time_layout_id"] = item.time_layout_id
                 d["time_layout_name"] = item.time_layout.name if item.time_layout else ""
+            elif config_type == "policy":
+                d["data_json"] = _normalize_policy_data(item.data_json)
+            elif config_type == "credential":
+                d["data_json"] = _normalize_credential_data(item.data_json)
             data.append(d)
         return Response(data)
 
@@ -457,6 +508,11 @@ class ConfigListAPI(APIView):
         data_json = request.data.get("data_json")
         if data_json is not None:
             kwargs["data_json"] = data_json
+
+        if config_type == "policy":
+            kwargs["data_json"] = _normalize_policy_data(kwargs.get("data_json"))
+        if config_type == "credential":
+            kwargs["data_json"] = _normalize_credential_data(kwargs.get("data_json"))
 
         if config_type == "class_plans":
             tl_id = request.data.get("time_layout_id")
@@ -491,6 +547,10 @@ class ConfigDetailAPI(APIView):
         if config_type == "class_plans":
             d["time_layout_id"] = obj.time_layout_id
             d["time_layout_name"] = obj.time_layout.name if obj.time_layout else ""
+        elif config_type == "policy":
+            d["data_json"] = _normalize_policy_data(obj.data_json)
+        elif config_type == "credential":
+            d["data_json"] = _normalize_credential_data(obj.data_json)
         return Response(d)
 
     def put(self, request, config_type, pk):
@@ -509,6 +569,10 @@ class ConfigDetailAPI(APIView):
             obj.identifier = data["identifier"]
         if "data_json" in data:
             obj.data_json = data["data_json"]
+        if config_type == "policy":
+            obj.data_json = _normalize_policy_data(obj.data_json)
+        if config_type == "credential":
+            obj.data_json = _normalize_credential_data(obj.data_json)
         if config_type == "class_plans" and "time_layout_id" in data:
             try:
                 obj.time_layout = TimeLayoutConfig.objects.get(pk=data["time_layout_id"])
